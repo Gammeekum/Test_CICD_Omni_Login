@@ -12,12 +12,8 @@ on:
   workflow_dispatch:
 
 env:
-  SOURCE_PATH: './Test_CICD'
-  TARGET_PATH: ${{ github.workspace }}\temp  # Absolute path for Windows
-  SUITE_PATH: './Test_CICD/test-suite/base.suite.tspp'
-  RUN_PROFILE_PATH: './Test_CICD/run-profile/base.profile.tspp'
-  DEVASSURE_CLI_URL: 'https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip'
   JOB_NAME: 'dev_tests'
+  DEVASSURE_CLI_URL: 'https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip'
 
 jobs:
   execute_test:
@@ -53,7 +49,18 @@ jobs:
           Expand-Archive -Path DevAssure.zip -DestinationPath .\DevAssure -Force
           Write-Host "✅ DevAssure CLI extracted."
 
-      # Step 5: Pre-check suite and profile files
+      # Step 5: Define absolute paths
+      - name: Set Environment Paths
+        shell: pwsh
+        run: |
+          $env:SOURCE_PATH = "${{ github.workspace }}\Test_CICD"
+          $env:TARGET_PATH = "${{ github.workspace }}\temp"
+          $env:SUITE_PATH = "${{ github.workspace }}\Test_CICD\test-suite\base.suite.tspp"
+          $env:RUN_PROFILE_PATH = "${{ github.workspace }}\Test_CICD\run-profile\base.profile.tspp"
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+
+      # Step 6: Validate Suite and Profile Files
       - name: Validate Suite and Profile Files
         shell: pwsh
         run: |
@@ -66,7 +73,7 @@ jobs:
               exit 1
           }
 
-      # Step 6: Ensure target directory exists
+      # Step 7: Ensure target directory exists
       - name: Prepare Target Directory
         shell: pwsh
         run: |
@@ -74,7 +81,7 @@ jobs:
               New-Item -ItemType Directory -Path $env:TARGET_PATH -Force | Out-Null
           }
 
-      # Step 7: Execute DevAssure Tests
+      # Step 8: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: pwsh
         env:
@@ -100,14 +107,14 @@ jobs:
                  --job-name $env:JOB_NAME `
                  --run-profile $env:RUN_PROFILE_PATH
 
-      # Step 8: Upload Test Results
+      # Step 9: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results_Windows
-          path: ${{ env.TARGET_PATH }}
+          path: ${{ env:TARGET_PATH }}
 
-      # Step 9: Send Test Report Email (optional)
+      # Step 10: Send Test Report Email (optional)
       - name: Send Test Report Email
         if: success()
         uses: dawidd6/action-send-mail@v3
@@ -128,4 +135,4 @@ jobs:
 
             Regards,
             GitHub Actions - DevAssure CI/CD
-          attachments: ${{ env.TARGET_PATH }}
+          attachments: ${{ env:TARGET_PATH }}
