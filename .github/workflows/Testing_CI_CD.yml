@@ -1,13 +1,27 @@
-name: DevAssure CI/CD Automation (Windows)
+name: Run DevAssure Tests (Windows)
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:   # Allow manual trigger from GitHub UI
+      - '*'
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+env:
+  SOURCE_PATH: './Test_CICD'
+  TARGET_PATH: 'temp\\'
+  SUITE_PATH: './Demo/test-suite/base.suite.tspp'
+  DEVASSURE_CLI_URL: 'https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip'  # Windows build assumed
+  DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_TOKEN }}
+  JOB_NAME: 'dev_tests'
+  RUN_PROFILE_PATH: './Demo/run-profile/base.profile.tspp'
 
 jobs:
-  devassure-tests:
+  execute_test:
     runs-on: windows-latest
 
     steps:
@@ -15,53 +29,73 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Verify DevAssure CLI path
-      - name: Locate DevAssure CLI
-        shell: pwsh
-        run: |
-          Write-Host "Checking for DevAssure CLI..."
-          $path = "C:\Program Files\DevAssure\cli\devassure-cli.exe"
-          if (Test-Path $path) {
-              Write-Host "✅ DevAssure CLI found at $path"
-          } else {
-              Write-Error "❌ DevAssure CLI not found at $path. Please ensure it is installed and added to PATH."
-          }
+      # Step 2: Set up Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-      # Step 3: Run DevAssure Automation Tests
-      - name: Run DevAssure Tests
+      # Step 3: Install npm and pnpm
+      - name: Install npm and pnpm
         shell: pwsh
-        env:
-          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
         run: |
-          Write-Host "🚀 Running DevAssure tests..."
-          $cli = "C:\Program Files\DevAssure\cli\devassure-cli.exe"
-          if (!(Test-Path $cli)) { 
-              Write-Error "DevAssure CLI not found at $cli"
+          Write-Host "Installing npm and pnpm..."
+          npm install -g pnpm
+          npm --version
+          npx --version
+          node --version
+
+      # Step 4: Download and unzip DevAssure CLI
+      - name: Download and Unzip DevAssure CLI
+        shell: pwsh
+        run: |
+          Write-Host "⬇️ Downloading DevAssure CLI for Windows..."
+          Invoke-WebRequest -Uri $env:DEVASSURE_CLI_URL -OutFile DevAssure.zip
+          Expand-Archive -Path DevAssure.zip -DestinationPath .\DevAssure -Force
+          Write-Host "✅ DevAssure CLI extracted."
+
+      # Step 5: Install project dependencies
+      - name: Install project dependencies
+        working-directory: ${{ env.SOURCE_PATH }}
+        shell: pwsh
+        run: |
+          pnpm install
+
+      # Step 6: Execute DevAssure Tests
+      - name: Execute DevAssure Tests
+        shell: pwsh
+        run: |
+          Write-Host "🚀 Running DevAssure Tests..."
+          $cli = ".\DevAssure\DA.exe"
+          if (!(Test-Path $cli)) {
+              Write-Error "❌ DevAssure CLI not found at $cli"
               exit 1
           }
 
-          # Create results directory if not exists
-          if (!(Test-Path ".\results")) {
-              New-Item -ItemType Directory -Path ".\results" | Out-Null
+          # Ensure target directory exists
+          if (!(Test-Path $env:TARGET_PATH)) {
+              New-Item -ItemType Directory -Path $env:TARGET_PATH | Out-Null
           }
 
-          # Run DevAssure tests
-          & "$cli" run `
-              --project .\tests `
-              --auth-token $env:DEVASSURE_AUTH_TOKEN `
-              --report .\results\results.xml
+          & $cli --auth-token $env:DEVASSURE_TOKEN `
+                 --source $env:SOURCE_PATH `
+                 --target $env:TARGET_PATH `
+                 run --suite $env:SUITE_PATH `
+                 --total-nodes 1 --node-id 0 `
+                 --branch "${{ github.ref_name }}" `
+                 --job-name $env:JOB_NAME `
+                 --run-profile $env:RUN_PROFILE_PATH
 
-          Write-Host "✅ DevAssure tests completed successfully."
-
-      # Step 4: Upload test results as artifact
+      # Step 7: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results_Windows
-          path: .\results
+          path: ${{ env.TARGET_PATH }}
 
-      # Step 5: Send Test Report Email
+      # Step 8: Send Test Report Email (optional)
       - name: Send Test Report Email
+        if: success()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -74,10 +108,10 @@ jobs:
           body: |
             Hello Gammachuu,
 
-            The DevAssure automation workflow for repo **${{ github.repository }}** has completed successfully on **Windows**.
+            The DevAssure CI/CD automation workflow for **${{ github.repository }}** has completed successfully on Windows.
 
             Test results are attached.
 
             Regards,
             GitHub Actions - DevAssure CI/CD
-          attachments: .\results\results.xml
+          attachments: ${{ env.TARGET_PATH }}
