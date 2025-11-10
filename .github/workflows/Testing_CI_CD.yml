@@ -20,7 +20,7 @@ jobs:
       SOURCE_PATH: ./Test_CICD
       TARGET_PATH: ./temp
       SUITE_PATH: ./Test_CICD/test-suite/base.suite.tspp
-      RUN_PROFILE_PATH: ./Test_CICD/run-profile/base.profile.tspp
+      RUN_PROFILE_PATH: ./Test_CICD/Test_CICD/run-profile/base.profile.tspp
 
     steps:
       # Step 1: Checkout repository
