@@ -58,9 +58,7 @@ jobs:
       - name: Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         shell: pwsh
-        run: |
-          pnpm install
-
+        
       # Step 6: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: pwsh
