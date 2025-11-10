@@ -16,20 +16,22 @@ jobs:
     steps:
       # Step 1: Checkout repository
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Step 2: Set up CLI (Windows & Linux)
+      # Step 2: Set up DevAssure CLI
       - name: Set up DevAssure CLI
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            # Linux installation (replace with actual CLI download link)
+            echo "Installing DevAssure CLI for Linux..."
+            # Replace with your actual CLI installation URL or command
             curl -sSL https://your-devassure-cli-download-url-linux | bash
           else
-            # Windows path assumed
-            echo "DevAssure CLI should be installed in C:\Program Files\DevAssure\cli\devassure-cli.exe"
+            echo "Using pre-installed DevAssure CLI on Windows..."
+            # Adjust if CLI is in a different path
+            dir "C:\Program Files\DevAssure\cli"
           fi
 
-      # Step 3: Run DevAssure tests
+      # Step 3: Run DevAssure Tests
       - name: Run DevAssure CLI Tests
         env:
           DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
@@ -40,30 +42,29 @@ jobs:
             "C:\Program Files\DevAssure\cli\devassure-cli.exe" run --project .\tests --auth-token $ENV:DEVASSURE_AUTH_TOKEN --report .\results\results.xml
           fi
 
-      # Step 4: Upload test results as artifacts
+      # Step 4: Upload test results as artifacts (v4 FIX)
       - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: devassure-results
+          name: DevAssure_Test_Results_${{ matrix.os }}
           path: ./results
 
-      # Step 5: Send email with results
+      # Step 5: Send Test Report Email
       - name: Send Test Report Email
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}       # Gmail or your SMTP user
-          password: ${{ secrets.EMAIL_PASSWORD }}       # App password for Gmail
-          subject: DevAssure Test Results - ${{ github.repository }}
-          to: gamtaa@gmail.com                    # Replace with recipient
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: DevAssure Test Results - ${{ github.repository }} (${{ matrix.os }})
+          to: gamtaa@gmail.com
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             Hello,
 
-            The DevAssure automation workflow for repo ${{ github.repository }} has completed.
+            The DevAssure automation workflow for repo ${{ github.repository }} has completed on ${{ matrix.os }}.
 
             Test results are attached.
 
           attachments: ./results/results.xml
-
