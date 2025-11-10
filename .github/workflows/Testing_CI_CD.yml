@@ -55,9 +55,7 @@ jobs:
           Write-Host "✅ DevAssure CLI extracted."
 
       # Step 5: Install project dependencies
-      - name: Install project dependencies
-        working-directory: ${{ env.SOURCE_PATH }}
-        shell: pwsh
+     
         
       # Step 6: Execute DevAssure Tests
       - name: Execute DevAssure Tests
