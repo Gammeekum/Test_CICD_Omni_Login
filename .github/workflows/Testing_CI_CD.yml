@@ -42,7 +42,6 @@ jobs:
           npm --version
           npx --version
           node --version
-
       # Step 4: Download and unzip DevAssure CLI
       - name: Download and Unzip DevAssure CLI
         shell: pwsh
@@ -51,7 +50,6 @@ jobs:
           Invoke-WebRequest -Uri $env:DEVASSURE_CLI_URL -OutFile DevAssure.zip
           Expand-Archive -Path DevAssure.zip -DestinationPath .\DevAssure -Force
           Write-Host "✅ DevAssure CLI extracted."
-
       # Step 5: Validate Suite and Profile Files
       - name: Validate Test Suite and Run Profile
         shell: pwsh
@@ -66,46 +64,37 @@ jobs:
          exit 1
          }
           Write-Host "✅ Paths are valid."
-
       # Step 6: Prepare target directory
-      - name: Setup DevAssure Dependencies
-  shell: pwsh
-  run: |
-    Write-Host "⚙️ Setting up DevAssure dependencies..."
-    $setupScript = ".\DevAssure\tpp_setup_browsers.bat"  # or .ps1 if provided
-    if (Test-Path $setupScript) {
-        & $setupScript
-    } else {
-        Write-Warning "⚠️ Dependency setup script not found. Tests may fail."
-    }
-
-# Step 7: Execute DevAssure Tests
-  - name: Execute DevAssure Tests
-  shell: pwsh
-  env:
-    DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
-  run: |
-    Write-Host "🚀 Running DevAssure Tests..."
-    $cli = ".\DevAssure\DA.exe"
-    if (!(Test-Path $cli)) {
-        Write-Error "❌ DevAssure CLI not found at $cli"
-        exit 1
-    }
-
-    # Ensure target directory exists
-    if (!(Test-Path $env:TARGET_PATH)) {
-        New-Item -ItemType Directory -Path $env:TARGET_PATH | Out-Null
-    }
-
-    & $cli --auth-token "$env:DEVASSURE_AUTH_TOKEN" `
-           --source $env:SOURCE_PATH `
-           --target $env:TARGET_PATH `
-           run --suite $env:SUITE_PATH `
-           --total-nodes 1 --node-id 0 `
-           --branch "main" `
-           --job-name $env:JOB_NAME `
-           --run-profile $env:RUN_PROFILE_PATH
-
+      - name: Prepare Target Directory
+        shell: pwsh
+        run: |
+          if (!(Test-Path $env:TARGET_PATH)) {
+              New-Item -ItemType Directory -Path $env:TARGET_PATH -Force | Out-Null
+          }
+      # Step 7: Execute DevAssure Tests
+      - name: Execute DevAssure Tests
+        shell: pwsh
+        env:
+          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
+        run: |
+          Write-Host "🚀 Running DevAssure Tests..."
+          $cli = ".\DevAssure\DA.exe"
+          if (!(Test-Path $cli)) {
+              Write-Error "❌ DevAssure CLI not found at $cli"
+              exit 1
+          }
+          if (-not $env:DEVASSURE_AUTH_TOKEN) {
+              Write-Error "❌ DEVASSURE_AUTH_TOKEN is empty! Check GitHub Secrets."
+              exit 1
+          }
+          & $cli --auth-token "$env:DEVASSURE_AUTH_TOKEN" `
+                 --source $env:SOURCE_PATH `
+                 --target $env:TARGET_PATH `
+                 run --suite $env:SUITE_PATH `
+                 --total-nodes 1 --node-id 0 `
+                 --branch "${{ github.ref_name }}" `
+                 --job-name $env:JOB_NAME `
+                 --run-profile $env:RUN_PROFILE_PATH
       # Step 8: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -127,11 +116,8 @@ jobs:
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             Hello Gammachuu,
-
             The DevAssure CI/CD automation workflow for **${{ github.repository }}** has completed successfully on Windows.
-
             Test results are attached.
-
             Regards,
             GitHub Actions - DevAssure CI/CD
           attachments: ${{ env.TARGET_PATH }}
