@@ -1,0 +1,7 @@
+{
+  "name": "Base Suite",
+  "description": "A minimal test suite for Test_CICD",
+  "tests": [
+    "./tests/sample.test.ts"  // Replace or add your actual test files here
+  ]
+}
