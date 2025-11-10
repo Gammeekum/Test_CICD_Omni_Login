@@ -11,13 +11,16 @@ on:
       - '*'
   workflow_dispatch:
 
-env:
-  JOB_NAME: 'dev_tests'
-  DEVASSURE_CLI_URL: 'https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip'
-
 jobs:
   execute_test:
     runs-on: windows-latest
+    env:
+      JOB_NAME: dev_tests
+      DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip
+      SOURCE_PATH: ./Test_CICD
+      TARGET_PATH: ./temp
+      SUITE_PATH: ./Test_CICD/test-suite/base.suite.tspp
+      RUN_PROFILE_PATH: ./Test_CICD/run-profile/base.profile.tspp
 
     steps:
       # Step 1: Checkout repository
@@ -45,25 +48,11 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "⬇️ Downloading DevAssure CLI for Windows..."
-          Invoke-WebRequest -Uri ${{ env.DEVASSURE_CLI_URL }} -OutFile DevAssure.zip
+          Invoke-WebRequest -Uri $env:DEVASSURE_CLI_URL -OutFile DevAssure.zip
           Expand-Archive -Path DevAssure.zip -DestinationPath .\DevAssure -Force
           Write-Host "✅ DevAssure CLI extracted."
 
-      # Step 5: Set absolute paths for workspace
-      - name: Set Absolute Paths
-        shell: pwsh
-        run: |
-          Write-Host "Setting absolute paths..."
-          $env:SOURCE_PATH = "${{ github.workspace }}\Test_CICD"
-          $env:TARGET_PATH = "${{ github.workspace }}\temp"
-          $env:SUITE_PATH = "${{ github.workspace }}\Test_CICD\test-suite\base.suite.tspp"
-          $env:RUN_PROFILE_PATH = "${{ github.workspace }}\Test_CICD\run-profile\base.profile.tspp"
-          Write-Host "SOURCE_PATH = $env:SOURCE_PATH"
-          Write-Host "TARGET_PATH = $env:TARGET_PATH"
-          Write-Host "SUITE_PATH = $env:SUITE_PATH"
-          Write-Host "RUN_PROFILE_PATH = $env:RUN_PROFILE_PATH"
-
-      # Step 6: Validate Suite and Profile Files
+      # Step 5: Validate Suite and Profile Files
       - name: Validate Suite and Profile Files
         shell: pwsh
         run: |
@@ -76,7 +65,7 @@ jobs:
               exit 1
           }
 
-      # Step 7: Prepare target directory
+      # Step 6: Prepare target directory
       - name: Prepare Target Directory
         shell: pwsh
         run: |
@@ -84,7 +73,7 @@ jobs:
               New-Item -ItemType Directory -Path $env:TARGET_PATH -Force | Out-Null
           }
 
-      # Step 8: Execute DevAssure Tests
+      # Step 7: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: pwsh
         env:
@@ -107,17 +96,17 @@ jobs:
                  run --suite $env:SUITE_PATH `
                  --total-nodes 1 --node-id 0 `
                  --branch "${{ github.ref_name }}" `
-                 --job-name ${{ env.JOB_NAME }} `
+                 --job-name $env:JOB_NAME `
                  --run-profile $env:RUN_PROFILE_PATH
 
-      # Step 9: Upload Test Results
+      # Step 8: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results_Windows
           path: ${{ env.TARGET_PATH }}
 
-      # Step 10: Send Test Report Email (optional)
+      # Step 9: Send Test Report Email (optional)
       - name: Send Test Report Email
         if: success()
         uses: dawidd6/action-send-mail@v3
