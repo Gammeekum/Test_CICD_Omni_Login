@@ -14,11 +14,10 @@ on:
 env:
   SOURCE_PATH: './Test_CICD'
   TARGET_PATH: 'temp\\'
-  SUITE_PATH: './Demo/test-suite/base.suite.tspp'
-  DEVASSURE_CLI_URL: 'https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip'  # Windows build assumed
-  DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
+  SUITE_PATH: './Test_CICD/test-suite/base.suite.tspp'
+  DEVASSURE_CLI_URL: 'https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip'
   JOB_NAME: 'dev_tests'
-  RUN_PROFILE_PATH: './Demo/run-profile/base.profile.tspp'
+  RUN_PROFILE_PATH: './Test_CICD/run-profile/base.profile.tspp'
 
 jobs:
   execute_test:
@@ -54,12 +53,11 @@ jobs:
           Expand-Archive -Path DevAssure.zip -DestinationPath .\DevAssure -Force
           Write-Host "✅ DevAssure CLI extracted."
 
-      # Step 5: Install project dependencies
-     
-        
-      # Step 6: Execute DevAssure Tests
+      # Step 5: Execute DevAssure Tests with token injected at step level
       - name: Execute DevAssure Tests
         shell: pwsh
+        env:
+          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
         run: |
           Write-Host "🚀 Running DevAssure Tests..."
           $cli = ".\DevAssure\DA.exe"
@@ -73,7 +71,12 @@ jobs:
               New-Item -ItemType Directory -Path $env:TARGET_PATH | Out-Null
           }
 
-          & $cli --auth-token $env:DEVASSURE_AUTH_TOKEN `
+          if (-not $env:DEVASSURE_AUTH_TOKEN) {
+              Write-Error "❌ DEVASSURE_AUTH_TOKEN is empty! Check GitHub Secrets."
+              exit 1
+          }
+
+          & $cli --auth-token "$env:DEVASSURE_AUTH_TOKEN" `
                  --source $env:SOURCE_PATH `
                  --target $env:TARGET_PATH `
                  run --suite $env:SUITE_PATH `
@@ -82,14 +85,14 @@ jobs:
                  --job-name $env:JOB_NAME `
                  --run-profile $env:RUN_PROFILE_PATH
 
-      # Step 7: Upload Test Results
+      # Step 6: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results_Windows
           path: ${{ env.TARGET_PATH }}
 
-      # Step 8: Send Test Report Email (optional)
+      # Step 7: Send Test Report Email (optional)
       - name: Send Test Report Email
         if: success()
         uses: dawidd6/action-send-mail@v3
