@@ -1,53 +1,64 @@
-name: DevAssure CI/CD Automation
+name: DevAssure CI/CD Automation (Windows)
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:   # Allow manual trigger
+  workflow_dispatch:   # Allow manual trigger from GitHub UI
 
 jobs:
   devassure-tests:
-    strategy:
-      matrix:
-        os: [windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
       # Step 1: Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up DevAssure CLI
-      - name: Set up DevAssure CLI
+      # Step 2: Verify DevAssure CLI path
+      - name: Locate DevAssure CLI
+        shell: pwsh
         run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            echo "Installing DevAssure CLI for Linux..."
-            # Replace with your actual CLI installation URL or command
-            curl -sSL https://your-devassure-cli-download-url-linux | bash
-          else
-            echo "Using pre-installed DevAssure CLI on Windows..."
-            # Adjust if CLI is in a different path
-            dir "C:\Program Files\DevAssure\cli"
-          fi
+          Write-Host "Checking for DevAssure CLI..."
+          $path = "C:\Program Files\DevAssure\cli\devassure-cli.exe"
+          if (Test-Path $path) {
+              Write-Host "✅ DevAssure CLI found at $path"
+          } else {
+              Write-Error "❌ DevAssure CLI not found at $path. Please ensure it is installed and added to PATH."
+          }
 
-      # Step 3: Run DevAssure Tests
-      - name: Run DevAssure CLI Tests
+      # Step 3: Run DevAssure Automation Tests
+      - name: Run DevAssure Tests
+        shell: pwsh
         env:
           DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
         run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            ./devassure-cli run --project ./tests --auth-token $DEVASSURE_AUTH_TOKEN --report ./results/results.xml
-          else
-            "C:\Program Files\DevAssure\cli\devassure-cli.exe" run --project .\tests --auth-token $ENV:DEVASSURE_AUTH_TOKEN --report .\results\results.xml
-          fi
+          Write-Host "🚀 Running DevAssure tests..."
+          $cli = "C:\Program Files\DevAssure\cli\devassure-cli.exe"
+          if (!(Test-Path $cli)) { 
+              Write-Error "DevAssure CLI not found at $cli"
+              exit 1
+          }
 
-      # Step 4: Upload test results as artifacts (v4 FIX)
+          # Create results directory if not exists
+          if (!(Test-Path ".\results")) {
+              New-Item -ItemType Directory -Path ".\results" | Out-Null
+          }
+
+          # Run DevAssure tests
+          & "$cli" run `
+              --project .\tests `
+              --auth-token $env:DEVASSURE_AUTH_TOKEN `
+              --report .\results\results.xml
+
+          Write-Host "✅ DevAssure tests completed successfully."
+
+      # Step 4: Upload test results as artifact
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: DevAssure_Test_Results_${{ matrix.os }}
-          path: ./results
+          name: DevAssure_Test_Results_Windows
+          path: .\results
 
       # Step 5: Send Test Report Email
       - name: Send Test Report Email
@@ -57,14 +68,16 @@ jobs:
           server_port: 587
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: DevAssure Test Results - ${{ github.repository }} (${{ matrix.os }})
+          subject: DevAssure Test Results - ${{ github.repository }} (Windows)
           to: gamtaa@gmail.com
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
-            Hello,
+            Hello Gammachuu,
 
-            The DevAssure automation workflow for repo ${{ github.repository }} has completed on ${{ matrix.os }}.
+            The DevAssure automation workflow for repo **${{ github.repository }}** has completed successfully on **Windows**.
 
             Test results are attached.
 
-          attachments: ./results/results.xml
+            Regards,
+            GitHub Actions - DevAssure CI/CD
+          attachments: .\results\results.xml
