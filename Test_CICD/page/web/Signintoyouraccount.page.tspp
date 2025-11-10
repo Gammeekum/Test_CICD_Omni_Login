@@ -1,0 +1,8 @@
+>>summary: 
+>>recorderName: Signintoyouraccount
+
+==loginfmt;CSS;#i0116;Input;[CSS:[data-report-event='Signin_Email_Phone_Skype']^^CSS:[data-report-value='Email_Phone_Skype_Entry']^^CSS:[placeholder='Email or phone']^^CSS:[name='loginfmt']];[loginfmt];[Signintoyouraccount];;==
+==Signin_Submit;CSS;[data-report-event='Signin_Submit'];Input;[CSS:[data-report-value='Submit']^^CSS:[type='submit']^^CSS:#idSIButton9];[Signin_Submit];[Signintoyouraccount];;==
+==passwd;CSS;#i0118;Input;[CSS:[placeholder='Password']^^CSS:[name='passwd']^^CSS:[aria-label='Enter the password for test1001@qa1001.com']^^CSS:[type='password']];[passwd];[Signintoyouraccount];;==
+==DontShowAgain;CSS;[name='DontShowAgain'];;[CSS:[type='checkbox']^^CSS:label input^^CSS:#KmsiCheckboxField];[DontShowAgain];[Signintoyouraccount];;==
+

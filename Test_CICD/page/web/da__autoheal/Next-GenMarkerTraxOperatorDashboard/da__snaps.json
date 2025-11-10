@@ -1,0 +1,10 @@
+{
+    "Sign_In_To_Dashboard": [
+        {
+            "snapshot": "1762747514834.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Sign_In_To_Dashboard",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Sign In To Dashboard</button>"
+        }
+    ]
+}

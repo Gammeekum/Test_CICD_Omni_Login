@@ -1,0 +1,20 @@
+>>testDataType: undefined
+>>summary: 
+>>tags: 
+>>feature: 
+>>ticketUrl: 
+>>testCaseId: 
+>>importSource: 
+>>priority: 
+>>aiRequestId: 
+
+
+--Open URL-- [[https://uat-od.moolahplay.net/]] 
+--Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > Sign_In_To_Dashboard}} 
+--Input value-- ::constants.Credentials.userName:: --in-- {{web > Signintoyouraccount > loginfmt}} 
+--Click on-- {{web > Signintoyouraccount > Signin_Submit}} 
+--Input value-- ::constants.Credentials.passWord:: --in-- {{web > Signintoyouraccount > passwd}} 
+--Click on-- {{web > Signintoyouraccount > Signin_Submit}} 
+--Click on-- {{web > Signintoyouraccount > DontShowAgain}} 
+--Click on-- {{web > Signintoyouraccount > Signin_Submit}} 
+
