@@ -45,20 +45,23 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "⬇️ Downloading DevAssure CLI for Windows..."
-          Invoke-WebRequest -Uri $env:DEVASSURE_CLI_URL -OutFile DevAssure.zip
+          Invoke-WebRequest -Uri ${{ env.DEVASSURE_CLI_URL }} -OutFile DevAssure.zip
           Expand-Archive -Path DevAssure.zip -DestinationPath .\DevAssure -Force
           Write-Host "✅ DevAssure CLI extracted."
 
-      # Step 5: Define absolute paths
-      - name: Set Environment Paths
+      # Step 5: Set absolute paths for workspace
+      - name: Set Absolute Paths
         shell: pwsh
         run: |
+          Write-Host "Setting absolute paths..."
           $env:SOURCE_PATH = "${{ github.workspace }}\Test_CICD"
           $env:TARGET_PATH = "${{ github.workspace }}\temp"
           $env:SUITE_PATH = "${{ github.workspace }}\Test_CICD\test-suite\base.suite.tspp"
           $env:RUN_PROFILE_PATH = "${{ github.workspace }}\Test_CICD\run-profile\base.profile.tspp"
-        env:
-          GITHUB_WORKSPACE: ${{ github.workspace }}
+          Write-Host "SOURCE_PATH = $env:SOURCE_PATH"
+          Write-Host "TARGET_PATH = $env:TARGET_PATH"
+          Write-Host "SUITE_PATH = $env:SUITE_PATH"
+          Write-Host "RUN_PROFILE_PATH = $env:RUN_PROFILE_PATH"
 
       # Step 6: Validate Suite and Profile Files
       - name: Validate Suite and Profile Files
@@ -73,7 +76,7 @@ jobs:
               exit 1
           }
 
-      # Step 7: Ensure target directory exists
+      # Step 7: Prepare target directory
       - name: Prepare Target Directory
         shell: pwsh
         run: |
@@ -104,7 +107,7 @@ jobs:
                  run --suite $env:SUITE_PATH `
                  --total-nodes 1 --node-id 0 `
                  --branch "${{ github.ref_name }}" `
-                 --job-name $env:JOB_NAME `
+                 --job-name ${{ env.JOB_NAME }} `
                  --run-profile $env:RUN_PROFILE_PATH
 
       # Step 9: Upload Test Results
@@ -112,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results_Windows
-          path: ${{ env:TARGET_PATH }}
+          path: ${{ env.TARGET_PATH }}
 
       # Step 10: Send Test Report Email (optional)
       - name: Send Test Report Email
@@ -135,4 +138,4 @@ jobs:
 
             Regards,
             GitHub Actions - DevAssure CI/CD
-          attachments: ${{ env:TARGET_PATH }}
+          attachments: ${{ env.TARGET_PATH }}
