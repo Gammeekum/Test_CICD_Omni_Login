@@ -53,17 +53,19 @@ jobs:
           Write-Host "✅ DevAssure CLI extracted."
 
       # Step 5: Validate Suite and Profile Files
-      - name: Validate Suite and Profile Files
+      - name: Validate Test Suite and Run Profile
         shell: pwsh
         run: |
+         Write-Host "🔍 Validating test suite and run profile paths..."
           if (!(Test-Path $env:SUITE_PATH)) {
-              Write-Error "❌ Test suite file not found at $env:SUITE_PATH"
-              exit 1
-          }
-          if (!(Test-Path $env:RUN_PROFILE_PATH)) {
-              Write-Error "❌ Run profile file not found at $env:RUN_PROFILE_PATH"
-              exit 1
-          }
+          Write-Error "❌ Test suite file not found at $env:SUITE_PATH"
+          exit 1
+         }
+         if (!(Test-Path $env:RUN_PROFILE_PATH)) {
+          Write-Error "❌ Run profile file not found at $env:RUN_PROFILE_PATH"
+         exit 1
+         }
+          Write-Host "✅ Paths are valid."
 
       # Step 6: Prepare target directory
       - name: Prepare Target Directory
