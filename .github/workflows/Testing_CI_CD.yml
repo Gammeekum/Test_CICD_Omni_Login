@@ -13,11 +13,11 @@ on:
 
 env:
   SOURCE_PATH: './Test_CICD'
-  TARGET_PATH: 'temp\\'
+  TARGET_PATH: ${{ github.workspace }}\temp  # Absolute path for Windows
   SUITE_PATH: './Test_CICD/test-suite/base.suite.tspp'
+  RUN_PROFILE_PATH: './Test_CICD/run-profile/base.profile.tspp'
   DEVASSURE_CLI_URL: 'https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip'
   JOB_NAME: 'dev_tests'
-  RUN_PROFILE_PATH: './Test_CICD/run-profile/base.profile.tspp'
 
 jobs:
   execute_test:
@@ -53,7 +53,28 @@ jobs:
           Expand-Archive -Path DevAssure.zip -DestinationPath .\DevAssure -Force
           Write-Host "✅ DevAssure CLI extracted."
 
-      # Step 5: Execute DevAssure Tests with token injected at step level
+      # Step 5: Pre-check suite and profile files
+      - name: Validate Suite and Profile Files
+        shell: pwsh
+        run: |
+          if (!(Test-Path $env:SUITE_PATH)) {
+              Write-Error "❌ Test suite file not found at $env:SUITE_PATH"
+              exit 1
+          }
+          if (!(Test-Path $env:RUN_PROFILE_PATH)) {
+              Write-Error "❌ Run profile file not found at $env:RUN_PROFILE_PATH"
+              exit 1
+          }
+
+      # Step 6: Ensure target directory exists
+      - name: Prepare Target Directory
+        shell: pwsh
+        run: |
+          if (!(Test-Path $env:TARGET_PATH)) {
+              New-Item -ItemType Directory -Path $env:TARGET_PATH -Force | Out-Null
+          }
+
+      # Step 7: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: pwsh
         env:
@@ -65,12 +86,6 @@ jobs:
               Write-Error "❌ DevAssure CLI not found at $cli"
               exit 1
           }
-
-          # Ensure target directory exists
-          if (!(Test-Path $env:TARGET_PATH)) {
-              New-Item -ItemType Directory -Path $env:TARGET_PATH | Out-Null
-          }
-
           if (-not $env:DEVASSURE_AUTH_TOKEN) {
               Write-Error "❌ DEVASSURE_AUTH_TOKEN is empty! Check GitHub Secrets."
               exit 1
@@ -85,14 +100,14 @@ jobs:
                  --job-name $env:JOB_NAME `
                  --run-profile $env:RUN_PROFILE_PATH
 
-      # Step 6: Upload Test Results
+      # Step 8: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results_Windows
           path: ${{ env.TARGET_PATH }}
 
-      # Step 7: Send Test Report Email (optional)
+      # Step 9: Send Test Report Email (optional)
       - name: Send Test Report Email
         if: success()
         uses: dawidd6/action-send-mail@v3
