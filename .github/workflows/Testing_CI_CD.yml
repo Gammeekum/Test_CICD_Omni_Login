@@ -56,7 +56,7 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}       # Gmail or your SMTP user
           password: ${{ secrets.EMAIL_PASSWORD }}       # App password for Gmail
           subject: DevAssure Test Results - ${{ github.repository }}
-          to: your-email@example.com                    # Replace with recipient
+          to: gamtaa@gmail.com                    # Replace with recipient
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             Hello,
