@@ -2,6 +2,6 @@
   "name": "Base Suite",
   "description": "A minimal test suite for Test_CICD",
   "tests": [
-    "./Test_CICD/test/Login_Omni_OD_CID_Test.web.tc.tspp"  // Replace or add your actual test files here
+    "./Test_CICD/test/Login_Omni_OD_CID_Test.web.tc.tspp"  
   ]
 }
