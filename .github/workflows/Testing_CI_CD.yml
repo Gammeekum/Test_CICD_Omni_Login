@@ -16,7 +16,7 @@ env:
   TARGET_PATH: 'temp\\'
   SUITE_PATH: './Demo/test-suite/base.suite.tspp'
   DEVASSURE_CLI_URL: 'https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip'  # Windows build assumed
-  DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_TOKEN }}
+  DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
   JOB_NAME: 'dev_tests'
   RUN_PROFILE_PATH: './Demo/run-profile/base.profile.tspp'
 
@@ -73,7 +73,7 @@ jobs:
               New-Item -ItemType Directory -Path $env:TARGET_PATH | Out-Null
           }
 
-          & $cli --auth-token $env:DEVASSURE_TOKEN `
+          & $cli --auth-token $env:DEVASSURE_AUTH_TOKEN `
                  --source $env:SOURCE_PATH `
                  --target $env:TARGET_PATH `
                  run --suite $env:SUITE_PATH `
