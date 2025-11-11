@@ -1,4 +1,4 @@
-name: Run DevAssure Tests in Ubuntu
+name: Run DevAssure Tests in Ubuntu- Sending Test Result to Email 
 
 on:
   push:
@@ -139,7 +139,7 @@ jobs:
           echo "✅ DevAssure execution complete (exit code ignored for CI)."
 
       # Step 10: Upload all results (ensure correct paths)
-      - name: Upload Test Artifacts
+      - name: Upload DevAssure Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -148,12 +148,45 @@ jobs:
             ${{ env.TARGET_PATH }}/.target/**
             ${{ env.TARGET_PATH }}/**/*
 
-      - name: Upload HTML Report
+      - name: Extract Test Summary
         if: always()
-        uses: actions/upload-artifact@v4
+        id: extract_summary
+        run: |
+          SUMMARY_PATH="${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/summary.json"
+          if [ -f "$SUMMARY_PATH" ]; then
+            echo "summary_found=true" >> $GITHUB_OUTPUT
+            PASSED=$(jq '.passed' "$SUMMARY_PATH")
+            FAILED=$(jq '.failed' "$SUMMARY_PATH")
+            TOTAL=$(jq '.totalTests' "$SUMMARY_PATH")
+            echo "PASSED=$PASSED" >> $GITHUB_ENV
+            echo "FAILED=$FAILED" >> $GITHUB_ENV
+            echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+          else
+            echo "summary_found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Email Notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
         with:
-          name: DevAssure_HTML_Report
-          path: |
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "DevAssure Test Run - ${{ github.run_number }}"
+          to: gamtaa@gmail.com, mtxqa1@gmail.com
+          from: "GitHub CI <${{ secrets.SMTP_USERNAME }}>"
+          secure: true
+          body: |
+            🚀 DevAssure Tests Finished!
+
+            📋 Repository: ${{ github.repository }}
+            🧪 Workflow Run: ${{ github.run_number }}
+            ✅ Passed: ${{ env.PASSED }}
+            ❌ Failed: ${{ env.FAILED }}
+            📊 Total: ${{ env.TOTAL }}
+
+            HTML Report: (attached)
+          attachments: |
             ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/index.html
-            ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/summary.json
 
