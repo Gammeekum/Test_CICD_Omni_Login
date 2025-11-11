@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
     env:
       JOB_NAME: dev_tests
-      DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/windows/cli/DevAssure.zip
+      DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/linux/cli/DevAssure.zip
       SOURCE_PATH: ./Test_CICD
       TARGET_PATH: ./temp
       SUITE_PATH: ./Test_CICD/test-suite/base.suite.tspp
@@ -79,7 +79,8 @@ jobs:
           DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
         run: |
           Write-Host "🚀 Running DevAssure Tests..."
-          $cli = ".\DevAssure\DA.exe"
+          $cli = "./DevAssure/DA"
+          chmod +x $cli
           if (!(Test-Path $cli)) {
               Write-Error "❌ DevAssure CLI not found at $cli"
               exit 1
