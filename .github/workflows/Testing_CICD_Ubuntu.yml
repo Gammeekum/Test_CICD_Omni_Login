@@ -58,29 +58,40 @@ jobs:
           chmod +x ./tpp_setup_browsers || true
           ./tpp_setup_browsers || echo "tpp_setup_browsers failed but continuing..."
 
-           - name: Execute Tests  
-          shell: /usr/bin/bash
-          env:
-            JOB_NAME: dev_tests
-            DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/linux/cli/DevAssure.zip
-            SOURCE_PATH: ./Test_CICD
-            TARGET_PATH: ./temp
-            SUITE_PATH: ./Test_CICD/test-suite/base.suite.tspp
-            RUN_PROFILE_PATH: ./Test_CICD/run-profile/base.profile.tspp
-            DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_TOKEN }}
-          run: |
-            echo "Execute Tests ..."
-            chmod +x ./DA
-            mkdir -p $TARGET_PATH
-            ls -l
-            ./DA --auth-token $DEVASSURE_TOKEN \
-                 --source $SOURCE_PATH \
-                 --target $TARGET_PATH \
-                 run --suite $SUITE_PATH \
-                 --total-nodes 1 --node-id 0 \
-                 --branch main \
-                 --job-name $JOB_NAME \
-                 --run-profile $RUN_PROFILE_PATH
+      - name: Execute DevAssure Tests
+        shell: /usr/bin/bash
+        env:
+          JOB_NAME: dev_tests
+          DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/linux/cli/DevAssure.zip
+          SOURCE_PATH: ./Test_CICD
+          TARGET_PATH: ./temp
+          SUITE_PATH: ./Test_CICD/test-suite/base.suite.tspp
+          RUN_PROFILE_PATH: ./Test_CICD/run-profile/base.profile.tspp
+          DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_TOKEN }}
+        run: |
+          echo "🚀 Running DevAssure Tests..."
+          
+          # Ensure DevAssure CLI exists
+          if [ ! -f ./DA ]; then
+            echo "❌ DevAssure CLI not found!"
+            exit 1
+          fi
+      
+          # Ensure target directory exists
+          mkdir -p "$TARGET_PATH"
+      
+          ls -l
+      
+          # Run tests
+          ./DA --auth-token "$DEVASSURE_TOKEN" \
+               --source "$SOURCE_PATH" \
+               --target "$TARGET_PATH" \
+               run --suite "$SUITE_PATH" \
+               --total-nodes 1 --node-id 0 \
+               --branch main \
+               --job-name "$JOB_NAME" \
+               --run-profile "$RUN_PROFILE_PATH"
+
 
           
          
