@@ -14,24 +14,27 @@ on:
 env:
   JOB_NAME: dev_tests
   DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/linux/cli/DevAssure.zip
-  SOURCE_PATH: ./Test_CICD
-  TARGET_PATH: ./temp
-  SUITE_PATH: ./Test_CICD/test-suite/base.suite.tspp
-  RUN_PROFILE_PATH: ./Test_CICD/run-profile/base.profile.tspp
+  SOURCE_PATH: ${{ github.workspace }}/Test_CICD
+  TARGET_PATH: ${{ github.workspace }}/temp
+  SUITE_PATH: ${{ github.workspace }}/Test_CICD/test-suite/base.suite.tspp
+  RUN_PROFILE_PATH: ${{ github.workspace }}/Test_CICD/run-profile/base.profile.tspp
 
 jobs:
   execute_test:
     runs-on: ubuntu-22.04
 
     steps:
+      # Step 1: Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
+      # Step 3: Install npm and pnpm
       - name: Install npm and pnpm
         run: |
           echo "Installing npm and pnpm..."
@@ -40,6 +43,7 @@ jobs:
           npx --version
           node --version
 
+      # Step 4: Install DevAssure dependencies
       - name: Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
@@ -60,18 +64,23 @@ jobs:
           fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
           fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
 
+      # Step 5: Download and unzip DevAssure CLI
       - name: Download and Unzip DevAssure CLI
         shell: bash
         run: |
           echo "Download and unzip DevAssure CLI..."
           curl -L "${DEVASSURE_CLI_URL}" -o DevAssure.zip
           unzip -o DevAssure.zip
+          chmod +x ./DA
 
+      # Step 6: Install project dependencies
       - name: Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         run: pnpm install
 
-      - name: Setup DevAssure dependencies (Workaround)
+      # Step 7: Setup DevAssure dependencies (Workaround)
+      - name: Setup DevAssure dependencies
+        shell: bash
         run: |
           echo "Workaround: Manually setting up DevAssure dependencies..."
           if [ -f ./tpp_setup_browsers ]; then
@@ -81,6 +90,7 @@ jobs:
             echo "tpp_setup_browsers not found, skipping..."
           fi
 
+      # Step 8: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: bash
         env:
@@ -93,14 +103,20 @@ jobs:
         run: |
           echo "🚀 Running DevAssure Tests..."
 
+          # Ensure DevAssure CLI exists
           if [ ! -f ./DA ]; then
             echo "❌ DevAssure CLI not found!"
             exit 1
           fi
 
+          # Ensure target directory exists and is writable
           mkdir -p "$TARGET_PATH"
-          ls -l
+          chmod 777 "$TARGET_PATH"
 
+          ls -l "$SOURCE_PATH"
+          ls -l "$TARGET_PATH"
+
+          # Run DevAssure tests
           ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
                --source "$SOURCE_PATH" \
                --target "$TARGET_PATH" \
@@ -110,6 +126,7 @@ jobs:
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH"
 
+      # Step 9: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
