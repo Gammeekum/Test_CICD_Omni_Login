@@ -74,27 +74,47 @@ jobs:
       # Step 7: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: pwsh
-        env:
-          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
-        run: |
-          Write-Host "🚀 Running DevAssure Tests..."
-          $cli = ".\DevAssure\DA.exe"
-          if (!(Test-Path $cli)) {
-              Write-Error "❌ DevAssure CLI not found at $cli"
-              exit 1
-          }
-          if (-not $env:DEVASSURE_AUTH_TOKEN) {
-              Write-Error "❌ DEVASSURE_AUTH_TOKEN is empty! Check GitHub Secrets."
-              exit 1
-          }
-          & $cli --auth-token "$env:DEVASSURE_AUTH_TOKEN" `
-                 --source $env:SOURCE_PATH `
-                 --target $env:TARGET_PATH `
-                 run --suite $env:SUITE_PATH `
-                 --total-nodes 1 --node-id 0 `
-                 --branch "${{ github.ref_name }}" `
-                 --job-name $env:JOB_NAME `
-                 --run-profile $env:RUN_PROFILE_PATH
+         env:
+    DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
+  run: |
+    Write-Host "🚀 Running DevAssure Tests..."
+    $cli = ".\DevAssure\DA.exe"
+    if (!(Test-Path $cli)) {
+        Write-Error "❌ DevAssure CLI not found at $cli"
+        exit 1
+    }
+
+    # Ensure target directory exists and is clean
+    if (Test-Path $env:TARGET_PATH) {
+        Write-Host "🧹 Clearing old results in $env:TARGET_PATH..."
+        Remove-Item "$env:TARGET_PATH\*" -Recurse -Force -ErrorAction SilentlyContinue
+    } else {
+        New-Item -ItemType Directory -Path $env:TARGET_PATH | Out-Null
+    }
+
+    if (-not $env:DEVASSURE_AUTH_TOKEN) {
+        Write-Error "❌ DEVASSURE_AUTH_TOKEN is empty! Check GitHub Secrets."
+        exit 1
+    }
+
+    # ✅ Run tests
+    & $cli --auth-token "$env:DEVASSURE_AUTH_TOKEN" `
+           --source $env:SOURCE_PATH `
+           --target $env:TARGET_PATH `
+           run --suite $env:SUITE_PATH `
+           --total-nodes 1 --node-id 0 `
+           --branch "${{ github.ref_name }}" `
+           --job-name $env:JOB_NAME `
+           --run-profile $env:RUN_PROFILE_PATH
+
+    # ✅ Explicitly generate HTML report in the target folder
+    if (Test-Path "$env:TARGET_PATH") {
+        Write-Host "🧾 Generating HTML report manually..."
+        & $cli report --target $env:TARGET_PATH
+    } else {
+        Write-Warning "⚠️ Test result folder not found — skipping report generation."
+    }
+
       # Step 8: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
