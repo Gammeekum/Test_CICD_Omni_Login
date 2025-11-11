@@ -29,22 +29,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js (use Node 20 for compatibility)
+      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Step 3: Install npm and pnpm
-      - name: Install npm and pnpm
+      # Step 3: Downgrade npm (fix DevAssure dependency issue)
+      - name: Downgrade npm to v9
         run: |
-          echo "Installing npm and pnpm..."
-          npm install -g pnpm
+          echo "Downgrading npm to v9 for DevAssure compatibility..."
+          npm install -g npm@9
           npm --version
-          pnpm --version
           node --version
 
-      # Step 4: Install required Linux dependencies for DevAssure
+      # Step 4: Install pnpm
+      - name: Install pnpm
+        run: |
+          npm install -g pnpm
+          pnpm --version
+
+      # Step 5: Install required Linux libraries
       - name: Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
@@ -65,37 +70,37 @@ jobs:
           fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
           fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
 
-      # Step 5: Download and unzip DevAssure CLI
+      # Step 6: Download and unzip DevAssure CLI
       - name: Download and Unzip DevAssure CLI
         shell: bash
         run: |
-          echo "Downloading and unzipping DevAssure CLI..."
+          echo "Downloading DevAssure CLI..."
           curl -L "${DEVASSURE_CLI_URL}" -o DevAssure.zip
           unzip -o DevAssure.zip
           chmod +x ./DA
           echo "✅ DevAssure CLI ready."
 
-      # Step 6: Install project dependencies
+      # Step 7: Install project dependencies
       - name: Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         run: |
-          echo "Installing project dependencies with pnpm..."
+          echo "Installing project dependencies..."
           rm -rf node_modules pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
-      # Step 7: Setup DevAssure dependencies (workaround)
+      # Step 8: Setup DevAssure dependencies (optional browsers)
       - name: Setup DevAssure dependencies
         shell: bash
         run: |
           echo "Setting up DevAssure dependencies..."
           if [ -f ./tpp_setup_browsers ]; then
             chmod +x ./tpp_setup_browsers
-            ./tpp_setup_browsers || echo "⚠️ tpp_setup_browsers failed but continuing..."
+            ./tpp_setup_browsers || echo "⚠️ tpp_setup_browsers failed (non-blocking)"
           else
-            echo "tpp_setup_browsers not found, skipping..."
+            echo "tpp_setup_browsers not found, skipping."
           fi
 
-      # Step 8: Execute DevAssure Tests
+      # Step 9: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: bash
         env:
@@ -120,8 +125,6 @@ jobs:
           echo "🔎 Source Path: $SOURCE_PATH"
           echo "📂 Target Path: $TARGET_PATH"
 
-          # Run DevAssure CLI (ignore non-critical setup errors)
-          set +e
           ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
                --source "$SOURCE_PATH" \
                --target "$TARGET_PATH" \
@@ -130,18 +133,20 @@ jobs:
                --branch main \
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH"
-          STATUS=$?
-          set -e
 
-          if [ $STATUS -ne 0 ]; then
-            echo "⚠️ DevAssure exited with code $STATUS (non-blocking)."
-          else
-            echo "✅ DevAssure run completed successfully."
-          fi
-
-      # Step 9: Upload Test Results
-      - name: Upload Test Results
+      # Step 10: Upload all results (raw + HTML)
+      - name: Upload Test Artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
           path: ${{ env.TARGET_PATH }}
+
+      - name: Upload HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: DevAssure_HTML_Report
+          path: |
+            ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/index.html
+            ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/summary.json
