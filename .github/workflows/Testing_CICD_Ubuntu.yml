@@ -11,28 +11,22 @@ on:
       - '*'
   workflow_dispatch:
 
-env:
-      JOB_NAME: dev_tests
-      DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/linux/cli/DevAssure.zip
-      SOURCE_PATH: ./Test_CICD
-      TARGET_PATH: ./temp
-      SUITE_PATH: ./Test_CICD/test-suite/base.suite.tspp
-      RUN_PROFILE_PATH: ./Test_CICD/Test_CICD/run-profile/base.profile.tspp'
-
 jobs:
-
   execute_test:
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install npm
+
+      - name: Install npm and pnpm
         run: |
-          echo "Installing npm..."
+          echo "Installing npm and pnpm..."
           npm install -g pnpm
           npm --version
           npx --version
@@ -45,24 +39,28 @@ jobs:
 
       - name: Download and Unzip DevAssure CLI
         run: |
-          echo "Download and unzip DevAssure CLI ..."
+          echo "Download and unzip DevAssure CLI..."
           curl -L $DEVASSURE_CLI_URL -o DevAssure.zip
-          unzip DevAssure.zip
+          unzip -o DevAssure.zip
+
       - name: Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
-        run: |
-          pnpm install 
+        run: pnpm install
+
       - name: Setup DevAssure dependencies (Workaround)
         run: |
           echo "Workaround: Manually setting up DevAssure dependencies..."
-          chmod +x ./tpp_setup_browsers || true
-          ./tpp_setup_browsers || echo "tpp_setup_browsers failed but continuing..."
+          if [ -f ./tpp_setup_browsers ]; then
+            chmod +x ./tpp_setup_browsers
+            ./tpp_setup_browsers || echo "tpp_setup_browsers failed but continuing..."
+          else
+            echo "No tpp_setup_browsers script found, skipping..."
+          fi
 
       - name: Execute DevAssure Tests
-        shell: /usr/bin/bash
+        shell: bash
         env:
           JOB_NAME: dev_tests
-          DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/linux/cli/DevAssure.zip
           SOURCE_PATH: ./Test_CICD
           TARGET_PATH: ./temp
           SUITE_PATH: ./Test_CICD/test-suite/base.suite.tspp
@@ -70,18 +68,31 @@ jobs:
           DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_TOKEN }}
         run: |
           echo "🚀 Running DevAssure Tests..."
-          
-          # Ensure DevAssure CLI exists
+
+          # Validate CLI exists
           if [ ! -f ./DA ]; then
             echo "❌ DevAssure CLI not found!"
             exit 1
           fi
-      
+
+          # Validate test suite
+          if [ ! -f "$SUITE_PATH" ]; then
+            echo "❌ Test suite file not found at $SUITE_PATH"
+            exit 1
+          fi
+
+          # Validate run profile
+          if [ ! -f "$RUN_PROFILE_PATH" ]; then
+            echo "❌ Run profile file not found at $RUN_PROFILE_PATH"
+            exit 1
+          fi
+
           # Ensure target directory exists
           mkdir -p "$TARGET_PATH"
-      
+
+          # List contents for debug
           ls -l
-      
+
           # Run tests
           ./DA --auth-token "$DEVASSURE_TOKEN" \
                --source "$SOURCE_PATH" \
@@ -91,7 +102,3 @@ jobs:
                --branch main \
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH"
-
-
-          
-         
