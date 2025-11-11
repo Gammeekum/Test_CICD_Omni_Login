@@ -72,17 +72,18 @@ jobs:
               New-Item -ItemType Directory -Path $env:TARGET_PATH -Force | Out-Null
           }
       # Step 7: Execute DevAssure Tests
+            # Step 7: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: pwsh
-         env:
-    DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
-  run: |
-    Write-Host "🚀 Running DevAssure Tests..."
-    $cli = ".\DevAssure\DA.exe"
-    if (!(Test-Path $cli)) {
-        Write-Error "❌ DevAssure CLI not found at $cli"
-        exit 1
-    }
+        env:
+          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
+        run: |
+          Write-Host "🚀 Running DevAssure Tests..."
+          $cli = ".\DevAssure\DA.exe"
+          if (!(Test-Path $cli)) {
+              Write-Error "❌ DevAssure CLI not found at $cli"
+              exit 1
+          }
 
     # Ensure target directory exists and is clean
     if (Test-Path $env:TARGET_PATH) {
