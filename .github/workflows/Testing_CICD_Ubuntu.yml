@@ -24,17 +24,14 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      # Step 1: Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      # Step 3: Install npm and pnpm
       - name: Install npm and pnpm
         run: |
           echo "Installing npm and pnpm..."
@@ -43,7 +40,6 @@ jobs:
           npx --version
           node --version
 
-      # Step 4: Install DevAssure dependencies
       - name: Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
@@ -64,23 +60,18 @@ jobs:
           fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
           fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
 
-      # Step 5: Download and unzip DevAssure CLI
       - name: Download and Unzip DevAssure CLI
         shell: bash
-        env:
-          DEVASSURE_CLI_URL: ${{ env.DEVASSURE_CLI_URL }}
         run: |
           echo "Download and unzip DevAssure CLI..."
-          curl -L "$DEVASSURE_CLI_URL" -o DevAssure.zip
+          curl -L "${DEVASSURE_CLI_URL}" -o DevAssure.zip
           unzip -o DevAssure.zip
 
-      # Step 6: Install project dependencies
       - name: Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         run: pnpm install
 
-      # Step 7: Setup DevAssure dependencies (Workaround)
-      - name: Setup DevAssure dependencies
+      - name: Setup DevAssure dependencies (Workaround)
         run: |
           echo "Workaround: Manually setting up DevAssure dependencies..."
           if [ -f ./tpp_setup_browsers ]; then
@@ -90,7 +81,6 @@ jobs:
             echo "tpp_setup_browsers not found, skipping..."
           fi
 
-      # Step 8: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: bash
         env:
@@ -99,22 +89,18 @@ jobs:
           TARGET_PATH: ${{ env.TARGET_PATH }}
           SUITE_PATH: ${{ env.SUITE_PATH }}
           RUN_PROFILE_PATH: ${{ env.RUN_PROFILE_PATH }}
-          DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
+          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
         run: |
           echo "🚀 Running DevAssure Tests..."
-          
-          # Check DevAssure CLI exists
+
           if [ ! -f ./DA ]; then
             echo "❌ DevAssure CLI not found!"
             exit 1
           fi
 
-          # Ensure target directory exists
           mkdir -p "$TARGET_PATH"
-
           ls -l
 
-          # Run tests
           ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
                --source "$SOURCE_PATH" \
                --target "$TARGET_PATH" \
@@ -124,7 +110,6 @@ jobs:
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH"
 
-      # Step 9: Upload Test Results
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
