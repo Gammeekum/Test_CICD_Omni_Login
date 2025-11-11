@@ -99,7 +99,7 @@ jobs:
           TARGET_PATH: ${{ env.TARGET_PATH }}
           SUITE_PATH: ${{ env.SUITE_PATH }}
           RUN_PROFILE_PATH: ${{ env.RUN_PROFILE_PATH }}
-          DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_TOKEN }}
+          DEVASSURE_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
         run: |
           echo "🚀 Running DevAssure Tests..."
           
@@ -115,7 +115,7 @@ jobs:
           ls -l
 
           # Run tests
-          ./DA --auth-token "$DEVASSURE_TOKEN" \
+          ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
                --source "$SOURCE_PATH" \
                --target "$TARGET_PATH" \
                run --suite "$SUITE_PATH" \
