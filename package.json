@@ -1,0 +1,16 @@
+{
+  "name": "test_cicd_omni_login",
+  "version": "1.0.0",
+  "description": "Automation test project for DevAssure with GitHub Actions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No test script defined\""
+  },
+  "keywords": [],
+  "author": "Gammachuu Iddoosaa",
+  "license": "ISC",
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "axios": "^1.7.0"
+  }
+}
