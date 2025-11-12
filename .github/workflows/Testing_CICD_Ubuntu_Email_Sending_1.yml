@@ -1,14 +1,10 @@
-name: Run DevAssure Tests in Ubuntu- Sending Test Result to Email 
+name: Run DevAssure Tests in Ubuntu - Send Test Result to Email
 
 on:
   push:
-    branches:
-      - '*'
-    tags:
-      - '*'
+    branches: ['*']
   pull_request:
-    branches:
-      - '*'
+    branches: ['*']
   workflow_dispatch:
 
 env:
@@ -35,10 +31,9 @@ jobs:
         with:
           node-version: '20'
 
-      # Step 3: Downgrade npm (fix DevAssure dependency issue)
+      # Step 3: Downgrade npm to fix DevAssure compatibility
       - name: Downgrade npm to v9
         run: |
-          echo "Downgrading npm to v9 for DevAssure compatibility..."
           npm install -g npm@9
           npm --version
           node --version
@@ -53,26 +48,12 @@ jobs:
       - name: Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-          libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2 \
-          libdbus-1-3 libdrm2 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 \
-          libwayland-client0 libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 \
-          libxfixes3 libxkbcommon0 libxrandr2 ffmpeg libcairo-gobject2 libdbus-glib-1-2 \
-          libfontconfig1 libfreetype6 libgdk-pixbuf-2.0-0 libgtk-3-0 libpangocairo-1.0-0 \
-          libx11-xcb1 libxcb-shm0 libxcursor1 libxi6 libxrender1 libxtst6 libsoup-3.0-0 \
-          libenchant-2-2 gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
-          gstreamer1.0-plugins-good libicu70 libegl1 libepoxy0 libevdev2 libffi7 libgles2 libglx0 \
-          libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-0 libgstreamer1.0-0 libgtk-4-1 \
-          libgudev-1.0-0 libharfbuzz-icu0 libharfbuzz0b libhyphen0 libjpeg-turbo8 liblcms2-2 \
-          libmanette-0.2-0 libnotify4 libopengl0 libopenjp2-7 libopus0 libpng16-16 libproxy1v5 \
-          libsecret-1-0 libwayland-egl1 libwayland-server0 libwebpdemux2 libwoff1 libxml2 \
-          libxslt1.1 libx264-163 libatomic1 libevent-2.1-7 libavif13 xvfb fonts-noto-color-emoji \
-          fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
-          fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
+          sudo apt-get install -y jq curl unzip ffmpeg xvfb \
+          libnss3 libatk-bridge2.0-0 libgtk-3-0 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 libgbm1 \
+          libasound2 fonts-liberation fonts-noto-color-emoji fonts-unifont
 
       # Step 6: Download and unzip DevAssure CLI
       - name: Download and Unzip DevAssure CLI
-        shell: bash
         run: |
           echo "Downloading DevAssure CLI..."
           curl -L "${DEVASSURE_CLI_URL}" -o DevAssure.zip
@@ -84,28 +65,45 @@ jobs:
       - name: Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         run: |
-          echo "Installing project dependencies..."
           rm -rf node_modules pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
-      # Step 8: Setup DevAssure dependencies (optional browsers)
+      # Step 8: Setup DevAssure dependencies (optional)
       - name: Setup DevAssure dependencies
-        shell: bash
         run: |
-          echo "Setting up DevAssure dependencies..."
           if [ -f ./tpp_setup_browsers ]; then
             chmod +x ./tpp_setup_browsers
-            ./tpp_setup_browsers || echo "⚠️ tpp_setup_browsers failed (non-blocking)"
+            ./tpp_setup_browsers || echo "⚠️ Browser setup failed (non-blocking)"
           else
             echo "tpp_setup_browsers not found, skipping."
           fi
-           # Step 9: Execute DevAssure Tests (non-blocking)
+
+      # Step 9: Execute DevAssure Tests (non-blocking)
       - name: Execute DevAssure Tests
-        shell: bash
         continue-on-error: true
-        ...
+        env:
+          JOB_NAME: ${{ env.JOB_NAME }}
+          SOURCE_PATH: ${{ env.SOURCE_PATH }}
+          TARGET_PATH: ${{ env.TARGET_PATH }}
+          SUITE_PATH: ${{ env.SUITE_PATH }}
+          RUN_PROFILE_PATH: ${{ env.RUN_PROFILE_PATH }}
+          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
-          echo "✅ DevAssure execution complete (exit code ignored for CI)."
+          echo "🚀 Running DevAssure Tests..."
+          mkdir -p "$TARGET_PATH"
+          chmod 777 "$TARGET_PATH"
+
+          ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
+               --source "$SOURCE_PATH" \
+               --target "$TARGET_PATH" \
+               run --suite "$SUITE_PATH" \
+               --total-nodes 1 --node-id 0 \
+               --branch main \
+               --job-name "$JOB_NAME" \
+               --run-profile "$RUN_PROFILE_PATH" || true
+
+          echo "✅ DevAssure execution complete (exit code ignored)."
 
       # Step 10: Upload all results
       - name: Upload DevAssure Test Results
@@ -115,7 +113,7 @@ jobs:
           name: DevAssure_Test_Results
           path: |
             ${{ env.TARGET_PATH }}/.target/**
-            ${{ env.TARGET_PATH }}/**/*
+            ${{ env.TARGET_PATH }}/**
 
       # Step 11: Extract Test Summary
       - name: Extract Test Summary
@@ -124,30 +122,34 @@ jobs:
         run: |
           SUMMARY_PATH="${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/summary.json"
           if [ -f "$SUMMARY_PATH" ]; then
-            echo "summary_found=true" >> $GITHUB_OUTPUT
-            PASSED=$(jq '.passed' "$SUMMARY_PATH")
-            FAILED=$(jq '.failed' "$SUMMARY_PATH")
-            TOTAL=$(jq '.totalTests' "$SUMMARY_PATH")
+            echo "✅ Summary file found."
+            PASSED=$(jq -r '.passed // 0' "$SUMMARY_PATH")
+            FAILED=$(jq -r '.failed // 0' "$SUMMARY_PATH")
+            TOTAL=$(jq -r '.totalTests // 0' "$SUMMARY_PATH")
             echo "PASSED=$PASSED" >> $GITHUB_ENV
             echo "FAILED=$FAILED" >> $GITHUB_ENV
             echo "TOTAL=$TOTAL" >> $GITHUB_ENV
           else
-            echo "summary_found=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No summary.json found."
+            echo "PASSED=0" >> $GITHUB_ENV
+            echo "FAILED=0" >> $GITHUB_ENV
+            echo "TOTAL=0" >> $GITHUB_ENV
           fi
 
-      # Step 12: Send Email Notification
+      # Step 12: Send Email Notification (with debug)
       - name: Send Email Notification
         if: always()
         uses: dawidd6/action-send-mail@v3
         with:
+          debug: true
           server_address: smtp.gmail.com
-          server_port: 587
+          server_port: 465
+          secure: true
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "DevAssure Test Run - ${{ github.run_number }}"
+          subject: "📊 DevAssure Test Run #${{ github.run_number }}"
+          from: ${{ secrets.EMAIL_USERNAME }}
           to: gamtaa@gmail.com, mtxqa1@gmail.com
-          from: "GitHub CI <${{ secrets.EMAIL_USERNAME }}>"
-          secure: true
           body: |
             🚀 DevAssure Tests Finished!
 
@@ -157,8 +159,6 @@ jobs:
             ❌ Failed: ${{ env.FAILED }}
             📊 Total: ${{ env.TOTAL }}
 
-            HTML Report: (attached)
+            📎 HTML Report is attached.
           attachments: |
             ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/index.html
-
-
