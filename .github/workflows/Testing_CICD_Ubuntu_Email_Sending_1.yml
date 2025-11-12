@@ -149,7 +149,7 @@ jobs:
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "📊 DevAssure Test Run #${{ github.run_number }}"
           from: ${{ secrets.EMAIL_USERNAME }}
-          to: gamtaa@gmail.com, mtxqa1@gmail.com
+          to: mtxqa1@gmail.com
           body: |
             🚀 DevAssure Tests Finished!
 
