@@ -99,46 +99,15 @@ jobs:
           else
             echo "tpp_setup_browsers not found, skipping."
           fi
-
-        # Step 9: Execute DevAssure Tests (non-blocking)
-        
+           # Step 9: Execute DevAssure Tests (non-blocking)
       - name: Execute DevAssure Tests
         shell: bash
-        continue-on-error: true  # ✅ Don't fail workflow if CLI returns exit 1
-        env:
-          JOB_NAME: ${{ env.JOB_NAME }}
-          SOURCE_PATH: ${{ env.SOURCE_PATH }}
-          TARGET_PATH: ${{ env.TARGET_PATH }}
-          SUITE_PATH: ${{ env.SUITE_PATH }}
-          RUN_PROFILE_PATH: ${{ env.RUN_PROFILE_PATH }}
-          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
-          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+        continue-on-error: true
+        ...
         run: |
-          echo "🚀 Running DevAssure Tests..."
-
-          if [ ! -f ./DA ]; then
-            echo "❌ DevAssure CLI not found!"
-            exit 1
-          fi
-
-          mkdir -p "$TARGET_PATH"
-          chmod 777 "$TARGET_PATH"
-
-          echo "🔎 Source Path: $SOURCE_PATH"
-          echo "📂 Target Path: $TARGET_PATH"
-
-          ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
-               --source "$SOURCE_PATH" \
-               --target "$TARGET_PATH" \
-               run --suite "$SUITE_PATH" \
-               --total-nodes 1 --node-id 0 \
-               --branch main \
-               --job-name "$JOB_NAME" \
-               --run-profile "$RUN_PROFILE_PATH"
-
           echo "✅ DevAssure execution complete (exit code ignored for CI)."
 
-      # Step 10: Upload all results (ensure correct paths)
+      # Step 10: Upload all results
       - name: Upload DevAssure Test Results
         if: always()
         uses: actions/upload-artifact@v4
@@ -148,6 +117,7 @@ jobs:
             ${{ env.TARGET_PATH }}/.target/**
             ${{ env.TARGET_PATH }}/**/*
 
+      # Step 11: Extract Test Summary
       - name: Extract Test Summary
         if: always()
         id: extract_summary
@@ -165,6 +135,7 @@ jobs:
             echo "summary_found=false" >> $GITHUB_OUTPUT
           fi
 
+      # Step 12: Send Email Notification
       - name: Send Email Notification
         if: always()
         uses: dawidd6/action-send-mail@v3
@@ -189,4 +160,5 @@ jobs:
             HTML Report: (attached)
           attachments: |
             ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/index.html
+
 
