@@ -105,10 +105,6 @@ jobs:
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
           echo "🚀 Running DevAssure Tests..."
-          if [ ! -f ./DA ]; then
-            echo "❌ DevAssure CLI not found!"
-            exit 1
-          fi
 
           mkdir -p "$TARGET_PATH"
           chmod 777 "$TARGET_PATH"
@@ -125,34 +121,66 @@ jobs:
           echo "Debug: Listing contents of target folder"
           ls -R "$TARGET_PATH"
 
+      # ---------------------------
+      # FIXED: Smart detection of .target folder
+      # ---------------------------
+      - name: Detect DevAssure Output Directory
+        if: always()
+        id: detect_target
+        run: |
+          echo "Detecting .target result folder..."
+
+          TARGET1="${{ env.TARGET_PATH }}/.target"
+          TARGET2="${{ env.SOURCE_PATH }}/.target"
+
+          if [ -d "$TARGET1" ]; then
+            echo "FOUND_TARGET=$TARGET1" >> $GITHUB_ENV
+            echo "Using TARGET_PATH output."
+          elif [ -d "$TARGET2" ]; then
+            echo "FOUND_TARGET=$TARGET2" >> $GITHUB_ENV
+            echo "Using SOURCE_PATH output."
+          else
+            echo "❌ No .target folder found!"
+            echo "FOUND_TARGET=" >> $GITHUB_ENV
+          fi
+
       - name: Upload DevAssure Test Results
         if: always()
-        id: upload_artifact
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ env.SOURCE_PATH }}/.target/Test_GitHub_Runner/html-report
+          path: ${{ env.FOUND_TARGET }}
 
+      # ---------------------------
+      # FIXED: Summary.json extraction from BOTH SOURCE & TARGET
+      # ---------------------------
       - name: Extract Test Summary
         if: always()
         id: extract_summary
         run: |
-          SUMMARY_JSON=$(find ${{ env.TARGET_PATH }} -type f -name "summary.json" | head -n 1)
-          if [ -f "$SUMMARY_JSON" ]; then
-            echo "✅ Summary file found at $SUMMARY_JSON"
-            PASSED=$(jq '.passed // 0' "$SUMMARY_JSON")
-            FAILED=$(jq '.failed // 0' "$SUMMARY_JSON")
-            TOTAL=$(jq '.totalTests // 0' "$SUMMARY_JSON")
-          else
-            echo "❌ Summary not found, setting counts to 0"
-            PASSED=0
-            FAILED=0
-            TOTAL=0
+          SUMMARY_JSON=$(find "${{ env.TARGET_PATH }}" "${{ env.SOURCE_PATH }}" -type f -name "summary.json" | head -n 1)
+
+          if [ -z "$SUMMARY_JSON" ]; then
+            echo "❌ Summary not found. Setting all values to 0."
+            echo "PASSED=0" >> $GITHUB_ENV
+            echo "FAILED=0" >> $GITHUB_ENV
+            echo "TOTAL=0" >> $GITHUB_ENV
+            exit 0
           fi
+
+          echo "✅ Summary found at $SUMMARY_JSON"
+
+          PASSED=$(jq '.passed // 0' "$SUMMARY_JSON")
+          FAILED=$(jq '.failed // 0' "$SUMMARY_JSON")
+          TOTAL=$(jq '.totalTests // 0' "$SUMMARY_JSON")
+
           echo "PASSED=$PASSED" >> $GITHUB_ENV
           echo "FAILED=$FAILED" >> $GITHUB_ENV
           echo "TOTAL=$TOTAL" >> $GITHUB_ENV
 
+      # ---------------------------
+      # SEND EMAIL
+      # ---------------------------
       - name: Send Email Notification
         if: always()
         uses: dawidd6/action-send-mail@v3
@@ -170,12 +198,13 @@ jobs:
 
             📋 Repository: ${{ github.repository }}
             🧪 Workflow Run: ${{ github.run_number }}
+
             ✅ Passed: ${{ env.PASSED }}
             ❌ Failed: ${{ env.FAILED }}
             📊 Total: ${{ env.TOTAL }}
 
-            📎 HTML Report is attached if available.
+            📎 HTML Report attached if found.
           attachments: |
-            ${{ env.TARGET_PATH }}/**/html-report/index.html
+            ${{ env.FOUND_TARGET }}/Test_GitHub_Runner/html-report/index.html
           nodemailerdebug: true
           nodemailerlog: true
