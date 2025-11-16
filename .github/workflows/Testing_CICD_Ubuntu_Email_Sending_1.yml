@@ -25,17 +25,14 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      # Step 1: Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Step 3: Downgrade npm (for DevAssure compatibility)
       - name: Downgrade npm to v9
         run: |
           echo "Downgrading npm to v9 for DevAssure compatibility..."
@@ -43,34 +40,31 @@ jobs:
           npm --version
           node --version
 
-      # Step 4: Install pnpm
       - name: Install pnpm
         run: |
           npm install -g pnpm
           pnpm --version
 
-      # Step 5: Install DevAssure dependencies
       - name: Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-          libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2 \
-          libdbus-1-3 libdrm2 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 \
-          libwayland-client0 libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 \
-          libxfixes3 libxkbcommon0 libxrandr2 ffmpeg libcairo-gobject2 libdbus-glib-1-2 \
-          libfontconfig1 libfreetype6 libgdk-pixbuf-2.0-0 libgtk-3-0 libpangocairo-1.0-0 \
-          libx11-xcb1 libxcb-shm0 libxcursor1 libxi6 libxrender1 libxtst6 libsoup-3.0-0 \
-          libenchant-2-2 gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
-          gstreamer1.0-plugins-good libicu70 libegl1 libepoxy0 libevdev2 libffi7 libgles2 libglx0 \
-          libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-0 libgstreamer1.0-0 libgtk-4-1 \
-          libgudev-1.0-0 libharfbuzz-icu0 libharfbuzz0b libhyphen0 libjpeg-turbo8 liblcms2-2 \
-          libmanette-0.2-0 libnotify4 libopengl0 libopenjp2-7 libopus0 libpng16-16 libproxy1v5 \
-          libsecret-1-0 libwayland-egl1 libwayland-server0 libwebpdemux2 libwoff1 libxml2 \
-          libxslt1.1 libx264-163 libatomic1 libevent-2.1-7 libavif13 xvfb fonts-noto-color-emoji \
-          fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
-          fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
+            libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2 \
+            libdbus-1-3 libdrm2 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 \
+            libwayland-client0 libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 \
+            libxfixes3 libxkbcommon0 libxrandr2 ffmpeg libcairo-gobject2 libdbus-glib-1-2 \
+            libfontconfig1 libfreetype6 libgdk-pixbuf-2.0-0 libgtk-3-0 libpangocairo-1.0-0 \
+            libx11-xcb1 libxcb-shm0 libxcursor1 libxi6 libxrender1 libxtst6 libsoup-3.0-0 \
+            libenchant-2-2 gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good libicu70 libegl1 libepoxy0 libevdev2 libffi7 libgles2 libglx0 \
+            libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-0 libgstreamer1.0-0 libgtk-4-1 \
+            libgudev-1.0-0 libharfbuzz-icu0 libharfbuzz0b libhyphen0 libjpeg-turbo8 liblcms2-2 \
+            libmanette-0.2-0 libnotify4 libopengl0 libopenjp2-7 libopus0 libpng16-16 libproxy1v5 \
+            libsecret-1-0 libwayland-egl1 libwayland-server0 libwebpdemux2 libwoff1 libxml2 \
+            libxslt1.1 libx264-163 libatomic1 libevent-2.1-7 libavif13 xvfb fonts-noto-color-emoji \
+            fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
+            fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
 
-      # Step 6: Download and prepare DevAssure CLI
       - name: Download and Unzip DevAssure CLI
         shell: bash
         run: |
@@ -80,7 +74,6 @@ jobs:
           chmod +x ./DA
           echo "✅ DevAssure CLI ready."
 
-      # Step 7: Install project dependencies
       - name: Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         run: |
@@ -88,8 +81,7 @@ jobs:
           rm -rf node_modules pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
-      # Step 8: Setup DevAssure browsers (optional)
-      - name: Setup DevAssure dependencies
+      - name: Setup DevAssure browsers (optional)
         shell: bash
         run: |
           echo "Setting up DevAssure dependencies..."
@@ -100,7 +92,6 @@ jobs:
             echo "tpp_setup_browsers not found, skipping."
           fi
 
-      # Step 9: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: bash
         continue-on-error: true
@@ -114,7 +105,6 @@ jobs:
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
           echo "🚀 Running DevAssure Tests..."
-
           if [ ! -f ./DA ]; then
             echo "❌ DevAssure CLI not found!"
             exit 1
@@ -132,37 +122,47 @@ jobs:
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH"
 
-          echo "✅ DevAssure execution complete (exit code ignored)."
+          echo "✅ DevAssure execution complete."
 
-      # Step 10: Upload test results as artifacts
+          echo "Debug: Listing contents of target folder"
+          ls -R "$TARGET_PATH"
+
       - name: Upload DevAssure Test Results
         if: always()
+        run: |
+          TARGET_FOLDER=$(find ${{ env.TARGET_PATH }} -type d -name ".target" | head -n 1)
+          if [ -d "$TARGET_FOLDER" ]; then
+            echo "Uploading artifacts from $TARGET_FOLDER"
+            echo "::set-output name=artifact_path::$TARGET_FOLDER"
+          else
+            echo "No .target folder found, skipping artifact upload"
+            exit 0
+          fi
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ env.TARGET_PATH }}/.target
+          path: ${{ steps.upload_artifact.outputs.artifact_path }}
 
-      # Step 11: Extract test summary data
       - name: Extract Test Summary
         if: always()
         id: extract_summary
         run: |
-          SUMMARY_PATH="${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/summary.json"
-          if [ -f "$SUMMARY_PATH" ]; then
-            echo "✅ Summary file found."
-            echo "summary_found=true" >> $GITHUB_OUTPUT
-            PASSED=$(jq '.passed' "$SUMMARY_PATH")
-            FAILED=$(jq '.failed' "$SUMMARY_PATH")
-            TOTAL=$(jq '.totalTests' "$SUMMARY_PATH")
-            echo "PASSED=$PASSED" >> $GITHUB_ENV
-            echo "FAILED=$FAILED" >> $GITHUB_ENV
-            echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+          SUMMARY_JSON=$(find ${{ env.TARGET_PATH }} -type f -name "summary.json" | head -n 1)
+          if [ -f "$SUMMARY_JSON" ]; then
+            echo "✅ Summary file found at $SUMMARY_JSON"
+            PASSED=$(jq '.passed // 0' "$SUMMARY_JSON")
+            FAILED=$(jq '.failed // 0' "$SUMMARY_JSON")
+            TOTAL=$(jq '.totalTests // 0' "$SUMMARY_JSON")
           else
-            echo "❌ Summary not found."
-            echo "summary_found=false" >> $GITHUB_OUTPUT
+            echo "❌ Summary not found, setting counts to 0"
+            PASSED=0
+            FAILED=0
+            TOTAL=0
           fi
+          echo "PASSED=$PASSED" >> $GITHUB_ENV
+          echo "FAILED=$FAILED" >> $GITHUB_ENV
+          echo "TOTAL=$TOTAL" >> $GITHUB_ENV
 
-      # Step 12: Send Email Notification
       - name: Send Email Notification
         if: always()
         uses: dawidd6/action-send-mail@v3
@@ -184,8 +184,8 @@ jobs:
             ❌ Failed: ${{ env.FAILED }}
             📊 Total: ${{ env.TOTAL }}
 
-            📎 HTML Report is attached.
+            📎 HTML Report is attached if available.
           attachments: |
-            ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/index.html
+            ${{ env.TARGET_PATH }}/**/html-report/index.html
           nodemailerdebug: true
           nodemailerlog: true
