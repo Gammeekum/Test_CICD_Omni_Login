@@ -1,4 +1,4 @@
-name: Run DevAssure Tests in Ubuntu - Send Test Result via Email - Checking Path
+name: Run DevAssure Tests in Ubuntu - Send Test Result via Email
 
 on:
   push:
@@ -49,7 +49,7 @@ jobs:
           npm install -g pnpm
           pnpm --version
 
-      # Step 5: Install DevAssure dependencies
+      # Step 5: Install DevAssure CLI dependencies
       - name: Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
@@ -114,15 +114,12 @@ jobs:
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
           echo "🚀 Running DevAssure Tests..."
-
           if [ ! -f ./DA ]; then
             echo "❌ DevAssure CLI not found!"
             exit 1
           fi
-
           mkdir -p "$TARGET_PATH"
           chmod 777 "$TARGET_PATH"
-
           ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
                --source "$SOURCE_PATH" \
                --target "$TARGET_PATH" \
@@ -131,32 +128,33 @@ jobs:
                --branch main \
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH"
-
-          echo "✅ DevAssure execution complete (exit code ignored)."
-
-      #Debug Target Path 
-      - name: Debug DevAssure Output
-        run: |
-          echo "Target path: $TARGET_PATH"
-          ls -lR "$TARGET_PATH"
-
+          echo "✅ DevAssure execution complete."
 
       # Step 10: Upload test results as artifacts
       - name: Upload DevAssure Test Results
         if: always()
+        id: upload_artifact
+        run: |
+          TARGET_FOLDER=$(find ${{ env.TARGET_PATH }} -type d -name ".target" | head -n 1)
+          if [ -d "$TARGET_FOLDER" ]; then
+            echo "✅ .target folder found at $TARGET_FOLDER"
+            echo "artifact_path=$TARGET_FOLDER" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ No .target folder found, skipping artifact upload"
+            echo "artifact_path=" >> $GITHUB_OUTPUT
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ env.TARGET_PATH }}/.target
+          path: ${{ steps.upload_artifact.outputs.artifact_path }}
 
       # Step 11: Extract test summary data
       - name: Extract Test Summary
         if: always()
         id: extract_summary
         run: |
-          SUMMARY_PATH="${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/summary.json"
+          SUMMARY_PATH=$(find ${{ env.TARGET_PATH }} -type f -name "summary.json" | head -n 1)
           if [ -f "$SUMMARY_PATH" ]; then
-            echo "✅ Summary file found."
+            echo "✅ Summary file found at $SUMMARY_PATH"
             echo "summary_found=true" >> $GITHUB_OUTPUT
             PASSED=$(jq '.passed' "$SUMMARY_PATH")
             FAILED=$(jq '.failed' "$SUMMARY_PATH")
@@ -193,6 +191,6 @@ jobs:
 
             📎 HTML Report is attached.
           attachments: |
-            ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/index.html
+            ${{ steps.upload_artifact.outputs.artifact_path }}/Test_GitHub_Runner/html-report/index.html
           nodemailerdebug: true
           nodemailerlog: true
