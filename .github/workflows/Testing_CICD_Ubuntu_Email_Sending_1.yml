@@ -2,10 +2,13 @@ name: Run DevAssure Tests in Ubuntu
 
 on:
   push:
-    branches: ['*']
-    tags: ['*']
+    branches:
+      - '*'
+    tags:
+      - '*'
   pull_request:
-    branches: ['*']
+    branches:
+      - '*'
   workflow_dispatch:
 
 env:
@@ -15,7 +18,7 @@ env:
   TARGET_PATH: ${{ github.workspace }}/temp
   SUITE_PATH: ${{ github.workspace }}/Test_CICD/test-suite/base.suite.tspp
   RUN_PROFILE_PATH: ${{ github.workspace }}/Test_CICD/run-profile/base.profile.tspp
-  ENVIRONMENT: UAT_Environment  # ✅ fixed typo
+  ENVIRONMENT: UAT_Environment
 
 jobs:
   execute_test:
@@ -23,33 +26,36 @@ jobs:
 
     steps:
 
-      # ----------------------------------------
-      # 1️⃣ Checkout Repository
-      - name: 1️⃣ Checkout Repository
+      # --------------------------------------------------------------
+      # 01. CHECKOUT REPOSITORY
+      # --------------------------------------------------------------
+      - name: 01. Checkout Repository
         uses: actions/checkout@v4
-      # ----------------------------------------
 
-      # 2️⃣ Setup Node.js (downgrade to v18 for DevAssure CLI compatibility)
-      - name: 2️⃣ Setup Node.js
+      # --------------------------------------------------------------
+      # 02. SETUP NODE.JS
+      # --------------------------------------------------------------
+      - name: 02. Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      
-      - name: 3️⃣ Downgrade npm to v9
+          node-version: '20'
+
+      - name: 03. Downgrade npm to v9
         run: |
-          echo "Downgrading npm to v9..."
+          echo "🔧 Downgrading npm to v9 for DevAssure compatibility..."
           npm install -g npm@9
           npm --version
           node --version
 
-      # 4️⃣ Install pnpm
-      - name: 4️⃣ Install pnpm
+      - name: 04. Install pnpm
         run: |
           npm install -g pnpm
           pnpm --version
 
-      # 5️⃣ Install DevAssure CLI dependencies
-      - name: 5️⃣ Install DevAssure CLI dependencies
+      # --------------------------------------------------------------
+      # 05. INSTALL SYSTEM DEPENDENCIES
+      # --------------------------------------------------------------
+      - name: 05. Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -69,82 +75,145 @@ jobs:
             fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
             fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
 
-      # 6️⃣ Download and unzip DevAssure CLI
-      - name: 6️⃣ Download and Unzip DevAssure CLI
+      # --------------------------------------------------------------
+      # 06. DOWNLOAD & UNZIP DEVASSURE CLI
+      # --------------------------------------------------------------
+      - name: 06. Download and Unzip DevAssure CLI
         shell: bash
         run: |
+          echo "⬇️ Downloading DevAssure CLI..."
           curl -L "${DEVASSURE_CLI_URL}" -o DevAssure.zip
           unzip -o DevAssure.zip
           chmod +x ./DA
           echo "✅ DevAssure CLI ready."
 
-      # 7️⃣ Install project dependencies
-      - name: 7️⃣ Install project dependencies
+      # --------------------------------------------------------------
+      # 07. INSTALL PROJECT DEPENDENCIES
+      # --------------------------------------------------------------
+      - name: 07. Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         run: |
+          echo "📦 Installing project dependencies..."
           rm -rf node_modules pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
-      # 8️⃣ Setup DevAssure browsers (optional)
-      - name: 8️⃣ Setup DevAssure browsers
+      # --------------------------------------------------------------
+      # 08. SETUP DEVASSURE BROWSERS (OPTIONAL)
+      # --------------------------------------------------------------
+      - name: 08. Setup DevAssure browsers
         shell: bash
         run: |
+          echo "🖥 Setting up DevAssure browsers..."
           if [ -f ./tpp_setup_browsers ]; then
             chmod +x ./tpp_setup_browsers
             ./tpp_setup_browsers || echo "⚠️ tpp_setup_browsers failed (non-blocking)"
+          else
+            echo "ℹ️ tpp_setup_browsers not found, skipping."
           fi
 
-      # 9️⃣ Execute DevAssure Tests
-      - name: 9️⃣ Execute DevAssure Tests
+      # --------------------------------------------------------------
+      # 09. EXECUTE DEVASSURE TESTS
+      # --------------------------------------------------------------
+      - name: 09. Execute DevAssure Tests
         shell: bash
         continue-on-error: true
         env:
           DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
+          ENVIRONMENT: UAT_Environment
         run: |
           echo "🚀 Running DevAssure Tests..."
+
           mkdir -p "$TARGET_PATH"
           chmod 777 "$TARGET_PATH"
 
+          echo "🔧 Node.js & npm versions:"
+          node --version
+          npm --version
+          npm cache clean --force
+
+          echo "⏳ Setting up DevAssure dependencies (max 3 retries)..."
+          for i in {1..3}; do
+            ./DA --setup-dependencies && break
+            echo "⚠️ Dependency setup failed. Retry $i/3..."
+            sleep 5
+          done
+
+          echo "🏁 Running tests with environment: $ENVIRONMENT"
           ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
                --source "$SOURCE_PATH" \
                --target "$TARGET_PATH" \
+               --environment "$ENVIRONMENT" \
                run --suite "$SUITE_PATH" \
                --total-nodes 1 --node-id 0 \
                --branch main \
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH" || true
 
-          echo "Debug: Listing contents of target folder:"
-          ls -R "$TARGET_PATH"
+          echo "📂 Listing target folder contents:"
+          ls -R "$TARGET_PATH" || true
 
-      # 10️⃣ Wait for .target folder
-      - name: 10️⃣ Wait for DevAssure results (.target)
+          SUMMARY_JSON=$(find "${TARGET_PATH}" "${SOURCE_PATH}" -type f -name "summary.json" | head -n 1)
+          if [ -z "$SUMMARY_JSON" ]; then
+            echo "❌ summary.json not found, setting PASSED/FAILED/TOTAL=0"
+            echo "PASSED=0" >> $GITHUB_ENV
+            echo "FAILED=0" >> $GITHUB_ENV
+            echo "TOTAL=0" >> $GITHUB_ENV
+          else
+            echo "✅ Found summary.json at: $SUMMARY_JSON"
+            echo "---- Contents ----"
+            cat "$SUMMARY_JSON"
+            echo "------------------"
+
+            PASSED=$(jq '.passed // 0' "$SUMMARY_JSON")
+            FAILED=$(jq '.failed // 0' "$SUMMARY_JSON")
+            TOTAL=$(jq '.total // 0' "$SUMMARY_JSON")
+
+            echo "PASSED=$PASSED" >> $GITHUB_ENV
+            echo "FAILED=$FAILED" >> $GITHUB_ENV
+            echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+          fi
+
+      # --------------------------------------------------------------
+      # 10. WAIT FOR .TARGET FOLDER
+      # --------------------------------------------------------------
+      - name: 10. Wait for DevAssure results (.target)
         run: |
+          echo "⏳ Waiting for .target output..."
           for i in {1..20}; do
             if [ -d "${TARGET_PATH}/.target" ]; then
               echo "✅ .target folder detected!"
               ls -R "${TARGET_PATH}/.target"
               break
             fi
+            echo "⌛ Attempt $i/20 – waiting for .target..."
             sleep 3
           done
 
-      # 11️⃣ Detect .target folder
-      - name: 11️⃣ Detect .target result folder
+      # --------------------------------------------------------------
+      # 11. DETECT WHICH .TARGET EXISTS
+      # --------------------------------------------------------------
+      - name: 11. Detect .target result folder
         run: |
+          echo "🔍 Detecting .target result folder..."
+
           TARGET1="${TARGET_PATH}/.target"
           TARGET2="${SOURCE_PATH}/.target"
 
           if [ -d "$TARGET1" ]; then
             echo "FOUND_TARGET=$TARGET1" >> $GITHUB_ENV
+            echo "Using TARGET_PATH output."
           elif [ -d "$TARGET2" ]; then
             echo "FOUND_TARGET=$TARGET2" >> $GITHUB_ENV
+            echo "Using SOURCE_PATH output."
           else
+            echo "❌ No .target folder found!"
             echo "FOUND_TARGET=" >> $GITHUB_ENV
           fi
 
-      # 12️⃣ Upload DevAssure Test Results
-      - name: 12️⃣ Upload DevAssure Test Results
+      # --------------------------------------------------------------
+      # 12. UPLOAD RESULTS
+      # --------------------------------------------------------------
+      - name: 12. Upload DevAssure Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -152,28 +221,32 @@ jobs:
           path: ${{ env.FOUND_TARGET }}/Test_GitHub_Runner/html-report
           if-no-files-found: warn
 
-      # 13️⃣ Print and extract summary.json
-      - name: 13️⃣ Print summary.json and extract results
+      # --------------------------------------------------------------
+      # 13. SEND EMAIL NOTIFICATION
+      # --------------------------------------------------------------
+      - name: 13. Send Email Notification
         if: always()
-        run: |
-          SUMMARY_JSON=$(find "${TARGET_PATH}" "${SOURCE_PATH}" -type f -name "summary.json" | head -n 1)
-          if [ -z "$SUMMARY_JSON" ]; then
-            echo "❌ Summary not found. Setting all values to 0."
-            echo "PASSED=0" >> $GITHUB_ENV
-            echo "FAILED=0" >> $GITHUB_ENV
-            echo "TOTAL=0" >> $GITHUB_ENV
-            exit 0
-          fi
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          from: ${{ secrets.EMAIL_USERNAME }}
+          to: gamtaa@gmail.com, mtxqa1@gmail.com
+          subject: "📊 DevAssure Test Run #${{ github.run_number }}"
+          body: |
+            🚀 DevAssure Tests Finished!
 
-          echo "✅ Found summary.json at: $SUMMARY_JSON"
-          echo "---- Contents ----"
-          cat "$SUMMARY_JSON"
-          echo "------------------"
+            📋 Repository: ${{ github.repository }}
+            🧪 Workflow Run: ${{ github.run_number }}
+            ✅ Passed: ${{ env.PASSED }}
+            ❌ Failed: ${{ env.FAILED }}
+            📊 Total: ${{ env.TOTAL }}
 
-          PASSED=$(jq '.passed // 0' "$SUMMARY_JSON")
-          FAILED=$(jq '.failed // 0' "$SUMMARY_JSON")
-          TOTAL=$(jq '.total // 0' "$SUMMARY_JSON")
-
-          echo "PASSED=$PASSED" >> $GITHUB_ENV
-          echo "FAILED=$FAILED" >> $GITHUB_ENV
-          echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+            📎 HTML Report is attached if available.
+          attachments: |
+            ${{ env.FOUND_TARGET }}/**/html-report/index.html
+          nodemailerdebug: true
+          nodemailerlog: true
