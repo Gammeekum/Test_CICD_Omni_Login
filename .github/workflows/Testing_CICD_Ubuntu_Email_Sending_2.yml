@@ -1,4 +1,4 @@
-name: Run DevAssure Tests in Ubuntu - Send Test Result via Email
+name: Run DevAssure Tests in Ubuntu - Send Test Result via Email - Checking Path
 
 on:
   push:
@@ -133,6 +133,13 @@ jobs:
                --run-profile "$RUN_PROFILE_PATH"
 
           echo "✅ DevAssure execution complete (exit code ignored)."
+
+      #Debug Target Path 
+      - name: Debug DevAssure Output
+        run: |
+          echo "Target path: $TARGET_PATH"
+          ls -lR "$TARGET_PATH"
+
 
       # Step 10: Upload test results as artifacts
       - name: Upload DevAssure Test Results
