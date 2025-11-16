@@ -1,0 +1,45 @@
+[
+    {
+        "environments": [
+            "default"
+        ],
+        "isDefault": false,
+        "constants": [
+            {
+                "name": "Amout",
+                "type": "text",
+                "value": "0.03"
+            },
+            {
+                "name": "Amount_1",
+                "type": "text",
+                "value": "0.3"
+            },
+            {
+                "name": "Amount_2",
+                "type": "number",
+                "value": "3"
+            },
+            {
+                "name": "paymentReason",
+                "type": "text",
+                "value": "Test"
+            },
+            {
+                "name": "CashAmount",
+                "type": "number",
+                "value": "0.05"
+            },
+            {
+                "name": "chipPaymentAmount",
+                "type": "text",
+                "value": "60"
+            },
+            {
+                "name": "chipPaymentType",
+                "type": "text",
+                "value": "chip"
+            }
+        ]
+    }
+]

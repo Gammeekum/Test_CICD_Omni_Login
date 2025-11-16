@@ -11,5 +11,18 @@
                 "value": "https://uat-od.moolahplay.net/"
             }
         ]
+    },
+    {
+        "environments": [
+            "default"
+        ],
+        "isDefault": false,
+        "constants": [
+            {
+                "name": "mainURL",
+                "type": "url",
+                "value": "https://uat-od.moolahplay.net/"
+            }
+        ]
     }
 ]

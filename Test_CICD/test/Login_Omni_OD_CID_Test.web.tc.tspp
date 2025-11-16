@@ -9,12 +9,24 @@
 >>aiRequestId: 
 
 
---Open URL-- [[https://uat-od.moolahplay.net/]] 
+--Open URL-- ::urls.mainURL:: 
+--Wait for-- [[2000]] --milliseconds-- 
 --Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > Sign_In_To_Dashboard}} 
+--Wait for-- [[1000]] --milliseconds-- 
 --Input value-- ::constants.Credentials.userName:: --in-- {{web > Signintoyouraccount > loginfmt}} 
 --Click on-- {{web > Signintoyouraccount > Signin_Submit}} 
 --Input value-- ::constants.Credentials.passWord:: --in-- {{web > Signintoyouraccount > passwd}} 
 --Click on-- {{web > Signintoyouraccount > Signin_Submit}} 
 --Click on-- {{web > Signintoyouraccount > DontShowAgain}} 
 --Click on-- {{web > Signintoyouraccount > Signin_Submit}} 
+--Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > Players}} 
+--Wait for-- [[1000]] --milliseconds-- 
+--Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > table_span_1}}(( rowId: 10, colId: 2 )) 
+--Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > Notes}} 
+--Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > Create_Note}} 
+--Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > subject}} 
+--Input value-- ::constants.Data.Note2:: --in-- {{web > Next-GenMarkerTraxOperatorDashboard > subject}} 
+--Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > content}} 
+--Input value-- ::constants.Data.Note2:: --in-- {{web > Next-GenMarkerTraxOperatorDashboard > content}} 
+--Click on-- {{web > Next-GenMarkerTraxOperatorDashboard > Confirm}} 
 

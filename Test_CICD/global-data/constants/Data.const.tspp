@@ -1,0 +1,31 @@
+[
+    {
+        "environments": [],
+        "isDefault": false,
+        "constants": [
+            {
+                "name": "PlayerID",
+                "type": "text",
+                "value": "60022"
+            },
+            {
+                "name": "Notes",
+                "type": "text",
+                "value": "Test1"
+            }
+        ]
+    },
+    {
+        "environments": [
+            "default"
+        ],
+        "isDefault": false,
+        "constants": [
+            {
+                "name": "Note2",
+                "type": "text",
+                "value": "Test2"
+            }
+        ]
+    }
+]

@@ -6,5 +6,421 @@
             "testLabel": "Login_Omni_OD_CID_Test.web",
             "attrs": "<button type=\"button\" type=\"button\">Sign In To Dashboard</button>"
         }
+    ],
+    "Players": [
+        {
+            "snapshot": "1762930436490.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Players",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<a type=\"a\">Players</a>"
+        }
+    ],
+    "Player_Id": [
+        {
+            "snapshot": "1762930296473.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Player_Id",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\" aria-haspopup=\"dialog\" aria-expanded=\"false\"> Player Id </button>"
+        }
+    ],
+    "Enter_Player_Id": [
+        {
+            "snapshot": "1762930300458.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Enter_Player_Id",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<input type=\"input\" placeholder=\"Enter Player Id\" type=\"text\" value=\"2\"></input>"
+        }
+    ],
+    "Apply": [
+        {
+            "snapshot": "1762930304489.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Apply",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Apply</button>"
+        }
+    ],
+    "Property_Name": [
+        {
+            "snapshot": "1762930440203.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Property_Name",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\">Property Name Player Id First Name Last Name Line </div>"
+        }
+    ],
+    "table_span": [
+        {
+            "snapshot": "1762930314365.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > table_span",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<span type=\"span\">20037</span>"
+        }
+    ],
+    "Make_Payment": [
+        {
+            "snapshot": "1762930447827.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Make_Payment",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Make Payment</button>"
+        }
+    ],
+    "spinbutton": [
+        {
+            "snapshot": "1762930451703.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > spinbutton",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<input type=\"input\" role=\"spinbutton\" type=\"text\" value=\"$0.20\" aria-roledescription=\"Number field\" aria-valuenow=\"0.2\" aria-valuemin=\"0\" aria-invalid=\"false\"></input>"
+        }
+    ],
+    "amount": [
+        {
+            "snapshot": "1762930451714.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > amount",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<input type=\"input\" type=\"text\" value=\"2\"></input>"
+        }
+    ],
+    "comment": [
+        {
+            "snapshot": "1762930455627.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > comment",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<textarea type=\"textarea\" placeholder=\"Enter a description for this Payment\" value=\"T\" aria-invalid=\"false\"></textarea>"
+        }
+    ],
+    "Next": [
+        {
+            "snapshot": "1762930457877.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Next",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Next</button>"
+        }
+    ],
+    "Submit": [
+        {
+            "snapshot": "1762930459417.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Submit",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Submit</button>"
+        }
+    ],
+    "Close": [
+        {
+            "snapshot": "1762930489163.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Close",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Close</button>"
+        }
+    ],
+    "Internal_Adjustment": [
+        {
+            "snapshot": "1762930360420.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Internal_Adjustment",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Internal Adjustment</button>"
+        }
+    ],
+    "comment_1": [
+        {
+            "snapshot": "1762930369411.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > comment_1",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<textarea type=\"textarea\" placeholder=\"Enter a description for this payment\" value=\"T\" aria-invalid=\"false\"></textarea>"
+        }
+    ],
+    "Patron_Info": [
+        {
+            "snapshot": "1762930398262.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Patron_Info",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<a type=\"a\">Patron Info</a>"
+        }
+    ],
+    "Change_Status": [
+        {
+            "snapshot": "1762930408425.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Change_Status",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Change Status</button>"
+        }
+    ],
+    "Select_a_status": [
+        {
+            "snapshot": "1762930421464.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Select_a_status",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" role=\"combobox\" type=\"button\" aria-invalid=\"true\" aria-controls=\"reka-select-content-v-1-101\" aria-expanded=\"false\" aria-required=\"false\" aria-autocomplete=\"none\" aria-describedby=\"v-1-100-error\">Select a status</button>"
+        }
+    ],
+    "open_true": [
+        {
+            "snapshot": "1762930427399.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > open_true",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\" data-aria-hidden=\"true\" aria-hidden=\"true\"></div>"
+        }
+    ],
+    "Closed_by_Operator": [
+        {
+            "snapshot": "1762930422847.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Closed_by_Operator",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\" role=\"option\" aria-labelledby=\"reka-select-item-text-v-1-117\" aria-selected=\"false\">Closed by Operator</div>"
+        }
+    ],
+    "Select_a_subtype": [
+        {
+            "snapshot": "1762930424628.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Select_a_subtype",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" role=\"combobox\" type=\"button\" aria-invalid=\"false\" aria-controls=\"reka-select-content-v-1-120\" aria-expanded=\"false\" aria-required=\"false\" aria-autocomplete=\"none\">Select a subtype</button>"
+        }
+    ],
+    "Cancel": [
+        {
+            "snapshot": "1762930429113.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Cancel",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Cancel</button>"
+        }
+    ],
+    "table_span_1": [
+        {
+            "snapshot": "1762930503228.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > table_span_1",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<span type=\"span\">$2.00</span>"
+        }
+    ],
+    "by_G2E_Casino": [
+        {
+            "snapshot": "1762930472230.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > by_G2E_Casino",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\"> by G2E CasinoCustomer ReceiptIssued Date:November</div>"
+        }
+    ],
+    "Payment_Receipt": [
+        {
+            "snapshot": "1762930477528.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Payment_Receipt",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\" role=\"dialog\" aria-describedby=\"reka-dialog-description-v-1-183\" aria-labelledby=\"reka-dialog-title-v-1-182\">Payment Receipt by G2E CasinoCustomer ReceiptIssue</div>"
+        }
+    ],
+    "Close_1": [
+        {
+            "snapshot": "1762930482694.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Close_1",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\">Close</button>"
+        }
+    ],
+    "Search": [
+        {
+            "snapshot": "1762930487127.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Search",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<body type=\"body\">Search...CtrlKHomePlayersReportsEmployeesSettingsT</body>"
+        }
+    ],
+    "Player_Activity": [
+        {
+            "snapshot": "1762930494051.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Player_Activity",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<a type=\"a\">Player Activity</a>"
+        }
+    ],
+    "Make_Payment_1": [
+        {
+            "snapshot": "1762931081021.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Make_Payment_1",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\" role=\"dialog\" aria-describedby=\"reka-dialog-description-v-1-45\" aria-labelledby=\"reka-dialog-title-v-1-44\">Make PaymentAmountPayment typeCashChipCheckJackpot</div>"
+        }
+    ],
+    "Print_Document": [
+        {
+            "snapshot": "1762931109807.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Print_Document",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\"></button>"
+        }
+    ],
+    "Payment_Receipt_1": [
+        {
+            "snapshot": "1762931114628.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Payment_Receipt_1",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\">Payment Receipt</div>"
+        }
+    ],
+    "by_G2E_Casino_1": [
+        {
+            "snapshot": "1762931128395.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > by_G2E_Casino_1",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\"> by G2E CasinoCustomer ReceiptIssued Date:November</div>"
+        }
+    ],
+    "Payment_Receipt_2": [
+        {
+            "snapshot": "1762931136664.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Payment_Receipt_2",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\" role=\"dialog\" aria-describedby=\"reka-dialog-description-v-1-62\" aria-labelledby=\"reka-dialog-title-v-1-61\">Payment Receipt by G2E CasinoCustomer ReceiptIssue</div>"
+        }
+    ],
+    "by_G2E_Casino_2": [
+        {
+            "snapshot": "1762932580670.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > by_G2E_Casino_2",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\"> by G2E CasinoCustomer ReceiptIssued Date:November</div>"
+        }
+    ],
+    "Payment_Receipt_3": [
+        {
+            "snapshot": "1762932587367.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Payment_Receipt_3",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\" role=\"dialog\" aria-describedby=\"reka-dialog-description-v-1-62\" aria-labelledby=\"reka-dialog-title-v-1-61\">Payment Receipt by G2E CasinoCustomer ReceiptIssue</div>"
+        }
+    ],
+    "table_div": [
+        {
+            "snapshot": "1762933290063.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > table_div",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\">$0.05</div>"
+        }
+    ],
+    "table_3_div": [
+        {
+            "snapshot": "1762933291731.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > table_3_div",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\">$0.05</div>"
+        }
+    ],
+    "table_5_div": [
+        {
+            "snapshot": "1762933293139.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > table_5_div",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\">Official Receipt</div>"
+        }
+    ],
+    "by_G2E_Casino_3": [
+        {
+            "snapshot": "1762933298442.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > by_G2E_Casino_3",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\"> by G2E CasinoCustomer ReceiptIssued Date:November</div>"
+        }
+    ],
+    "table_5_div_1": [
+        {
+            "snapshot": "1762933296457.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > table_5_div_1",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\">$0.05</div>"
+        }
+    ],
+    "Payment_Receipt_4": [
+        {
+            "snapshot": "1762933301669.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Payment_Receipt_4",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\" role=\"dialog\" aria-describedby=\"reka-dialog-description-v-1-62\" aria-labelledby=\"reka-dialog-title-v-1-61\">Payment Receipt by G2E CasinoCustomer ReceiptIssue</div>"
+        }
+    ],
+    "Payment_request_processed_succ": [
+        {
+            "snapshot": "1762933308419.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Payment_request_processed_succ",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<p type=\"p\">Payment request processed successfully</p>"
+        }
+    ],
+    "Chip": [
+        {
+            "snapshot": "1762935685126.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Chip",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" role=\"radio\" aria-label=\"Chip\" type=\"button\" value=\"chip\" aria-checked=\"false\" aria-label=\"Chip\"></button>"
+        }
+    ],
+    "payment_type": [
+        {
+            "snapshot": "1762935685640.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > payment_type",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<input type=\"input\" value=\"chip\"></input>"
+        }
+    ],
+    "Payment_Receipt_5": [
+        {
+            "snapshot": "1762935719557.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Payment_Receipt_5",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<div type=\"div\" role=\"dialog\" aria-describedby=\"reka-dialog-description-v-1-62\" aria-labelledby=\"reka-dialog-title-v-1-61\">Payment Receipt by G2E CasinoCustomer ReceiptIssue</div>"
+        }
+    ],
+    "More_actions": [
+        {
+            "snapshot": "1763275870742.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > More_actions",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" aria-label=\"More actions\" type=\"button\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-label=\"More actions\" aria-describedby=\"reka-tooltip-content-v-1-42\"></button>"
+        }
+    ],
+    "Notes": [
+        {
+            "snapshot": "1763275888316.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Notes",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<a type=\"a\">Notes</a>"
+        }
+    ],
+    "Create_Note": [
+        {
+            "snapshot": "1763275893215.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Create_Note",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"button\" aria-haspopup=\"dialog\" aria-expanded=\"false\"> Create Note </button>"
+        }
+    ],
+    "subject": [
+        {
+            "snapshot": "1763275896881.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > subject",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<input type=\"input\" placeholder=\"Enter note subject...\" type=\"text\" value=\"T\" aria-invalid=\"false\"></input>"
+        }
+    ],
+    "content": [
+        {
+            "snapshot": "1763275900473.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > content",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<textarea type=\"textarea\" placeholder=\"Enter note content...\" value=\"T\" aria-invalid=\"false\"></textarea>"
+        }
+    ],
+    "Confirm": [
+        {
+            "snapshot": "1763275904508.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Confirm",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<button type=\"button\" type=\"submit\">Confirm</button>"
+        }
+    ],
+    "Test1": [
+        {
+            "snapshot": "1763275911144.png",
+            "label": "page > web > Next-GenMarkerTraxOperatorDashboard > Test1",
+            "testLabel": "Login_Omni_OD_CID_Test.web",
+            "attrs": "<p type=\"p\">Test1</p>"
+        }
     ]
 }
