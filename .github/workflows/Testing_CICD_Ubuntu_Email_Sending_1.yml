@@ -26,32 +26,31 @@ jobs:
 
     steps:
 
-      # --------------------------------------------------------------
-      - name: Checkout Repository
+      # ------------------- Step 1: Checkout Repository -------------------
+      - name: 1️⃣ Checkout Repository
         uses: actions/checkout@v4
-      # --------------------------------------------------------------
 
-      - name: Setup Node.js
+      # ------------------- Step 2: Setup Node.js -------------------
+      - name: 2️⃣ Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Downgrade npm to v9
+      # ------------------- Step 3: Downgrade npm -------------------
+      - name: 3️⃣ Downgrade npm to v9
         run: |
-          echo "Downgrading npm to v9 for DevAssure compatibility..."
           npm install -g npm@9
           npm --version
           node --version
 
-      - name: Install pnpm
+      # ------------------- Step 4: Install pnpm -------------------
+      - name: 4️⃣ Install pnpm
         run: |
           npm install -g pnpm
           pnpm --version
 
-      # --------------------------------------------------------------
-      # Install all system-level browser + rendering dependencies
-      # --------------------------------------------------------------
-      - name: Install DevAssure CLI dependencies
+      # ------------------- Step 5: Install DevAssure CLI dependencies -------------------
+      - name: 5️⃣ Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -71,46 +70,37 @@ jobs:
             fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
             fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
 
-      # --------------------------------------------------------------
-      - name: Download and Unzip DevAssure CLI
+      # ------------------- Step 6: Download and Unzip DevAssure CLI -------------------
+      - name: 6️⃣ Download and Unzip DevAssure CLI
         shell: bash
         run: |
-          echo "Downloading DevAssure CLI..."
           curl -L "${DEVASSURE_CLI_URL}" -o DevAssure.zip
           unzip -o DevAssure.zip
           chmod +x ./DA
-          echo "✅ DevAssure CLI ready."
 
-      # --------------------------------------------------------------
-      - name: Install project dependencies
+      # ------------------- Step 7: Install Project Dependencies -------------------
+      - name: 7️⃣ Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         run: |
-          echo "Installing project dependencies..."
           rm -rf node_modules pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
-      # --------------------------------------------------------------
-      - name: Setup DevAssure browsers (optional)
+      # ------------------- Step 8: Setup DevAssure Browsers (optional) -------------------
+      - name: 8️⃣ Setup DevAssure browsers (optional)
         shell: bash
         run: |
-          echo "Setting up DevAssure dependencies..."
           if [ -f ./tpp_setup_browsers ]; then
             chmod +x ./tpp_setup_browsers
             ./tpp_setup_browsers || echo "⚠️ tpp_setup_browsers failed (non-blocking)"
-          else
-            echo "tpp_setup_browsers not found, skipping."
           fi
 
-      # --------------------------------------------------------------
-      # RUN DEVASSURE TESTS
-      # --------------------------------------------------------------
-      - name: Execute DevAssure Tests
+      # ------------------- Step 9: Execute DevAssure Tests -------------------
+      - name: 9️⃣ Execute DevAssure Tests
         shell: bash
         continue-on-error: true
         env:
           DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
         run: |
-          echo "🚀 Running DevAssure Tests..."
           mkdir -p "$TARGET_PATH"
           chmod 777 "$TARGET_PATH"
 
@@ -123,62 +113,59 @@ jobs:
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH" || true
 
-          echo "Debug: Listing contents of target folder right after run:"
           ls -R "$TARGET_PATH" || true
 
-      # --------------------------------------------------------------
-      # WAIT FOR .target FOLDER – FIXES ASYNC WRITING ISSUE
-      # --------------------------------------------------------------
-      - name: Wait for DevAssure results (.target)
+      # ------------------- Step 10: Wait for DevAssure Results -------------------
+      - name: 🔟 Wait for DevAssure results (.target)
         run: |
-          echo "⏳ Waiting for DevAssure .target output..."
           for i in {1..20}; do
             if [ -d "${TARGET_PATH}/.target" ]; then
-              echo "✅ .target folder detected!"
               ls -R "${TARGET_PATH}/.target"
               break
             fi
-            echo "⌛ Attempt $i/20 – waiting for .target..."
             sleep 3
           done
 
-      # --------------------------------------------------------------
-      # DETECT WHICH .target EXISTS
-      # --------------------------------------------------------------
-      - name: Detect .target result folder
+      # ------------------- Step 11: Detect .target Result Folder -------------------
+      - name: 1️⃣1️⃣ Detect .target result folder
         run: |
-          echo "Detecting .target result folder..."
-
           TARGET1="${TARGET_PATH}/.target"
           TARGET2="${SOURCE_PATH}/.target"
 
           if [ -d "$TARGET1" ]; then
             echo "FOUND_TARGET=$TARGET1" >> $GITHUB_ENV
-            echo "Using TARGET_PATH output."
           elif [ -d "$TARGET2" ]; then
             echo "FOUND_TARGET=$TARGET2" >> $GITHUB_ENV
-            echo "Using SOURCE_PATH output."
           else
-            echo "❌ No .target folder found!"
             echo "FOUND_TARGET=" >> $GITHUB_ENV
           fi
 
-      # --------------------------------------------------------------
-      # UPLOAD RESULTS
-      # --------------------------------------------------------------
-      - name: Upload DevAssure Test Results
+      # ------------------- Step 12: Upload Test Results -------------------
+      - name: 1️⃣2️⃣ Upload DevAssure Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
           path: ${{ env.FOUND_TARGET }}/Test_GitHub_Runner/html-report
-
           if-no-files-found: warn
 
-      # --------------------------------------------------------------
-      # READ SUMMARY.JSON
-      # --------------------------------------------------------------
-      - name: Extract Test Summary
+      # ------------------- Step 13: Print summary.json -------------------
+      - name: 1️⃣3️⃣ Print DevAssure summary.json
+        if: always()
+        run: |
+          SUMMARY_JSON=$(find "${TARGET_PATH}" "${SOURCE_PATH}" -type f -name "summary.json" | head -n 1)
+
+          if [ -z "$SUMMARY_JSON" ]; then
+            echo "❌ summary.json not found!"
+            exit 0
+          fi
+
+          echo "✅ Found summary.json at: $SUMMARY_JSON"
+          echo "Contents:"
+          cat "$SUMMARY_JSON" | jq '.'
+
+      # ------------------- Step 14: Extract Test Summary -------------------
+      - name: 1️⃣4️⃣ Extract Test Summary
         if: always()
         run: |
           SUMMARY_JSON=$(find "${TARGET_PATH}" "${SOURCE_PATH}" -type f -name "summary.json" | head -n 1)
@@ -191,8 +178,6 @@ jobs:
             exit 0
           fi
 
-          echo "✅ Summary found at $SUMMARY_JSON"
-
           PASSED=$(jq '.passed // 0' "$SUMMARY_JSON")
           FAILED=$(jq '.failed // 0' "$SUMMARY_JSON")
           TOTAL=$(jq '.totalTests // 0' "$SUMMARY_JSON")
@@ -201,10 +186,8 @@ jobs:
           echo "FAILED=$FAILED" >> $GITHUB_ENV
           echo "TOTAL=$TOTAL" >> $GITHUB_ENV
 
-      # --------------------------------------------------------------
-      # EMAIL RESULTS
-      # --------------------------------------------------------------
-      - name: Send Email Notification
+      # ------------------- Step 15: Send Email Notification -------------------
+      - name: 1️⃣5️⃣ Send Email Notification
         if: always()
         uses: dawidd6/action-send-mail@v3
         with:
