@@ -1,4 +1,4 @@
-name: Run DevAssure Tests in Ubuntu - Send Test Result via Email
+name: Run DevAssure Tests in Ubuntu
 
 on:
   push:
@@ -122,26 +122,16 @@ jobs:
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH"
 
-          echo "✅ DevAssure execution complete."
-
           echo "Debug: Listing contents of target folder"
           ls -R "$TARGET_PATH"
 
       - name: Upload DevAssure Test Results
         if: always()
-        run: |
-          TARGET_FOLDER=$(find ${{ env.TARGET_PATH }} -type d -name ".target" | head -n 1)
-          if [ -d "$TARGET_FOLDER" ]; then
-            echo "Uploading artifacts from $TARGET_FOLDER"
-            echo "::set-output name=artifact_path::$TARGET_FOLDER"
-          else
-            echo "No .target folder found, skipping artifact upload"
-            exit 0
-          fi
+        id: upload_artifact
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ steps.upload_artifact.outputs.artifact_path }}
+          path: ${{ env.TARGET_PATH }}
 
       - name: Extract Test Summary
         if: always()
