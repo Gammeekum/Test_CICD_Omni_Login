@@ -25,8 +25,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+
+      # --------------------------------------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
+      # --------------------------------------------------------------
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,6 +48,9 @@ jobs:
           npm install -g pnpm
           pnpm --version
 
+      # --------------------------------------------------------------
+      # Install all system-level browser + rendering dependencies
+      # --------------------------------------------------------------
       - name: Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
@@ -65,6 +71,7 @@ jobs:
             fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
             fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
 
+      # --------------------------------------------------------------
       - name: Download and Unzip DevAssure CLI
         shell: bash
         run: |
@@ -74,6 +81,7 @@ jobs:
           chmod +x ./DA
           echo "✅ DevAssure CLI ready."
 
+      # --------------------------------------------------------------
       - name: Install project dependencies
         working-directory: ${{ env.SOURCE_PATH }}
         run: |
@@ -81,6 +89,7 @@ jobs:
           rm -rf node_modules pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
+      # --------------------------------------------------------------
       - name: Setup DevAssure browsers (optional)
         shell: bash
         run: |
@@ -92,20 +101,16 @@ jobs:
             echo "tpp_setup_browsers not found, skipping."
           fi
 
+      # --------------------------------------------------------------
+      # RUN DEVASSURE TESTS
+      # --------------------------------------------------------------
       - name: Execute DevAssure Tests
         shell: bash
         continue-on-error: true
         env:
-          JOB_NAME: ${{ env.JOB_NAME }}
-          SOURCE_PATH: ${{ env.SOURCE_PATH }}
-          TARGET_PATH: ${{ env.TARGET_PATH }}
-          SUITE_PATH: ${{ env.SUITE_PATH }}
-          RUN_PROFILE_PATH: ${{ env.RUN_PROFILE_PATH }}
           DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
-          ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
           echo "🚀 Running DevAssure Tests..."
-
           mkdir -p "$TARGET_PATH"
           chmod 777 "$TARGET_PATH"
 
@@ -118,20 +123,34 @@ jobs:
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH" || true
 
-          echo "Debug: Listing contents of target folder"
-          ls -R "$TARGET_PATH"
+          echo "Debug: Listing contents of target folder right after run:"
+          ls -R "$TARGET_PATH" || true
 
-      # ---------------------------
-      # FIXED: Smart detection of .target folder
-      # ---------------------------
-      - name: Detect DevAssure Output Directory
-        if: always()
-        id: detect_target
+      # --------------------------------------------------------------
+      # WAIT FOR .target FOLDER – FIXES ASYNC WRITING ISSUE
+      # --------------------------------------------------------------
+      - name: Wait for DevAssure results (.target)
+        run: |
+          echo "⏳ Waiting for DevAssure .target output..."
+          for i in {1..20}; do
+            if [ -d "${TARGET_PATH}/.target" ]; then
+              echo "✅ .target folder detected!"
+              ls -R "${TARGET_PATH}/.target"
+              break
+            fi
+            echo "⌛ Attempt $i/20 – waiting for .target..."
+            sleep 3
+          done
+
+      # --------------------------------------------------------------
+      # DETECT WHICH .target EXISTS
+      # --------------------------------------------------------------
+      - name: Detect .target result folder
         run: |
           echo "Detecting .target result folder..."
 
-          TARGET1="${{ env.TARGET_PATH }}/.target"
-          TARGET2="${{ env.SOURCE_PATH }}/.target"
+          TARGET1="${TARGET_PATH}/.target"
+          TARGET2="${SOURCE_PATH}/.target"
 
           if [ -d "$TARGET1" ]; then
             echo "FOUND_TARGET=$TARGET1" >> $GITHUB_ENV
@@ -144,21 +163,24 @@ jobs:
             echo "FOUND_TARGET=" >> $GITHUB_ENV
           fi
 
+      # --------------------------------------------------------------
+      # UPLOAD RESULTS
+      # --------------------------------------------------------------
       - name: Upload DevAssure Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
           path: ${{ env.FOUND_TARGET }}/**
+          if-no-files-found: warn
 
-      # ---------------------------
-      # FIXED: Summary.json extraction from BOTH SOURCE & TARGET
-      # ---------------------------
+      # --------------------------------------------------------------
+      # READ SUMMARY.JSON
+      # --------------------------------------------------------------
       - name: Extract Test Summary
         if: always()
-        id: extract_summary
         run: |
-          SUMMARY_JSON=$(find "${{ env.TARGET_PATH }}" "${{ env.SOURCE_PATH }}" -type f -name "summary.json" | head -n 1)
+          SUMMARY_JSON=$(find "${TARGET_PATH}" "${SOURCE_PATH}" -type f -name "summary.json" | head -n 1)
 
           if [ -z "$SUMMARY_JSON" ]; then
             echo "❌ Summary not found. Setting all values to 0."
@@ -178,9 +200,9 @@ jobs:
           echo "FAILED=$FAILED" >> $GITHUB_ENV
           echo "TOTAL=$TOTAL" >> $GITHUB_ENV
 
-      # ---------------------------
-      # SEND EMAIL
-      # ---------------------------
+      # --------------------------------------------------------------
+      # EMAIL RESULTS
+      # --------------------------------------------------------------
       - name: Send Email Notification
         if: always()
         uses: dawidd6/action-send-mail@v3
@@ -198,13 +220,12 @@ jobs:
 
             📋 Repository: ${{ github.repository }}
             🧪 Workflow Run: ${{ github.run_number }}
-
             ✅ Passed: ${{ env.PASSED }}
             ❌ Failed: ${{ env.FAILED }}
             📊 Total: ${{ env.TOTAL }}
 
-            📎 HTML Report attached if found.
+            📎 HTML Report is attached if available.
           attachments: |
-            ${{ env.FOUND_TARGET }}/Test_GitHub_Runner/html-report/index.html
+            ${{ env.FOUND_TARGET }}/**/html-report/index.html
           nodemailerdebug: true
           nodemailerlog: true
