@@ -131,7 +131,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report
+          path: ${{ env.SOURCE_PATH }}/.target/Test_GitHub_Runner/html-report
 
       - name: Extract Test Summary
         if: always()
