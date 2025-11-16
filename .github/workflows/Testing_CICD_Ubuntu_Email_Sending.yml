@@ -1,4 +1,4 @@
-name: Run DevAssure Tests in Ubuntu
+name: Run DevAssure Tests in Ubuntu - Send Test Result via Email
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: '20'
 
-      # Step 3: Downgrade npm (fix DevAssure dependency issue)
+      # Step 3: Downgrade npm (for DevAssure compatibility)
       - name: Downgrade npm to v9
         run: |
           echo "Downgrading npm to v9 for DevAssure compatibility..."
@@ -49,7 +49,7 @@ jobs:
           npm install -g pnpm
           pnpm --version
 
-      # Step 5: Install required Linux libraries
+      # Step 5: Install DevAssure dependencies
       - name: Install DevAssure CLI dependencies
         run: |
           sudo apt-get update
@@ -70,7 +70,7 @@ jobs:
           fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
           fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
 
-      # Step 6: Download and unzip DevAssure CLI
+      # Step 6: Download and prepare DevAssure CLI
       - name: Download and Unzip DevAssure CLI
         shell: bash
         run: |
@@ -88,7 +88,7 @@ jobs:
           rm -rf node_modules pnpm-lock.yaml
           pnpm install --no-frozen-lockfile
 
-      # Step 8: Setup DevAssure dependencies (optional browsers)
+      # Step 8: Setup DevAssure browsers (optional)
       - name: Setup DevAssure dependencies
         shell: bash
         run: |
@@ -100,11 +100,10 @@ jobs:
             echo "tpp_setup_browsers not found, skipping."
           fi
 
-        # Step 9: Execute DevAssure Tests (non-blocking)
-        
+      # Step 9: Execute DevAssure Tests
       - name: Execute DevAssure Tests
         shell: bash
-        continue-on-error: true  # ✅ Don't fail workflow if CLI returns exit 1
+        continue-on-error: true
         env:
           JOB_NAME: ${{ env.JOB_NAME }}
           SOURCE_PATH: ${{ env.SOURCE_PATH }}
@@ -115,17 +114,13 @@ jobs:
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
           echo "🚀 Running DevAssure Tests..."
+          mkdir -p "$TARGET_PATH"
+          chmod 777 "$TARGET_PATH"
 
           if [ ! -f ./DA ]; then
             echo "❌ DevAssure CLI not found!"
             exit 1
           fi
-
-          mkdir -p "$TARGET_PATH"
-          chmod 777 "$TARGET_PATH"
-
-          echo "🔎 Source Path: $SOURCE_PATH"
-          echo "📂 Target Path: $TARGET_PATH"
 
           ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
                --source "$SOURCE_PATH" \
@@ -136,24 +131,70 @@ jobs:
                --job-name "$JOB_NAME" \
                --run-profile "$RUN_PROFILE_PATH"
 
-          echo "✅ DevAssure execution complete (exit code ignored for CI)."
+          echo "✅ DevAssure execution complete (exit code ignored)."
 
-      # Step 10: Upload all results (ensure correct paths)
-      - name: Upload Test Artifacts
+      # Step 10: Upload test results as artifacts
+      - name: Upload DevAssure Test Results
         if: always()
+        id: upload_artifact
+        run: |
+          # Dynamically find the .target folder created by DevAssure
+          TARGET_FOLDER=$(find ${{ env.TARGET_PATH }} -type d -name ".target" | head -n 1)
+          if [ -d "$TARGET_FOLDER" ]; then
+            echo "✅ .target folder found at $TARGET_FOLDER"
+            sleep 2
+            echo "artifact_path=$TARGET_FOLDER" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ No .target folder found, skipping artifact upload"
+            echo "artifact_path=" >> $GITHUB_OUTPUT
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: |
-            ${{ env.TARGET_PATH }}/.target/**
-            ${{ env.TARGET_PATH }}/**/*
+          path: ${{ steps.upload_artifact.outputs.artifact_path }}
 
-      - name: Upload HTML Report
+      # Step 11: Extract test summary data
+      - name: Extract Test Summary
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: DevAssure_HTML_Report
-          path: |
-            ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/index.html
-            ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/html-report/summary.json
+        id: extract_summary
+        run: |
+          SUMMARY_PATH="${{ steps.upload_artifact.outputs.artifact_path }}/Test_GitHub_Runner/html-report/summary.json"
+          if [ -f "$SUMMARY_PATH" ]; then
+            echo "✅ Summary file found."
+            echo "summary_found=true" >> $GITHUB_OUTPUT
+            PASSED=$(jq '.passed' "$SUMMARY_PATH")
+            FAILED=$(jq '.failed' "$SUMMARY_PATH")
+            TOTAL=$(jq '.totalTests' "$SUMMARY_PATH")
+            echo "PASSED=$PASSED" >> $GITHUB_ENV
+            echo "FAILED=$FAILED" >> $GITHUB_ENV
+            echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+          else
+            echo "❌ Summary not found."
+            echo "summary_found=false" >> $GITHUB_OUTPUT
+          fi
 
+      # Step 12: Send Email Notification
+      - name: Send Email Notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          from: ${{ secrets.EMAIL_USERNAME }}
+          to: gamtaa@gmail.com, mtxqa1@gmail.com
+          subject: "📊 DevAssure Test Run #${{ github.run_number }}"
+          body: |
+            🚀 DevAssure Tests Finished!
+
+            📋 Repository: ${{ github.repository }}
+            🧪 Workflow Run: ${{ github.run_number }}
+            ✅ Passed: ${{ env.PASSED }}
+            ❌ Failed: ${{ env.FAILED }}
+            📊 Total: ${{ env.TOTAL }}
+
+            📎 HTML Report is attached.
+          attachments: ${{ steps.upload_artifact.outputs.artifact_path }}/Test_GitHub_Runner/html-report/index.html
+          nodemailerdebug: true
+          nodemailerlog: true
