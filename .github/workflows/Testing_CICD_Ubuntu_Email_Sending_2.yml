@@ -118,8 +118,8 @@ jobs:
             echo "❌ DevAssure CLI not found!"
             exit 1
           fi
-          mkdir -p "$TARGET_PATH"
-          chmod 777 "$TARGET_PATH"
+          chmod +x ./DA
+          mkdir -m 777 "$TARGET_PATH"
           ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
                --source "$SOURCE_PATH" \
                --target "$TARGET_PATH" \
