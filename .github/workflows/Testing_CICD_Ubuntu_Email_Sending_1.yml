@@ -118,7 +118,7 @@ jobs:
           # Start virtual display for GUI
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
-
+          npx playwright install --with-deps
           # Run DevAssure tests (NO unsupported flags)
           ./DA --debug true --auth-token "$DEVASSURE_AUTH_TOKEN" \
              --source "$SOURCE_PATH" \
