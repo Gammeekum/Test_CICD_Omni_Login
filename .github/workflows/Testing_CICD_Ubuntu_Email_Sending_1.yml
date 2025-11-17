@@ -155,7 +155,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ env.TARGET_PATH }}/.target/**
+          path: ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/**
+
           if-no-files-found: warn
 
       # =============================================================
