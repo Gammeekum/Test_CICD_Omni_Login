@@ -1,178 +1,89 @@
-name: Run DevAssure Tests in Ubuntu
+name: DevAssure Test Workflow
 
 on:
   push:
-    branches:
-      - '*'
-    tags:
-      - '*'
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - '*'
-  workflow_dispatch:
-
-env:
-  JOB_NAME: dev_tests
-  DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/linux/cli/DevAssure.zip
-  SOURCE_PATH: ${{ github.workspace }}/Test_CICD
-  TARGET_PATH: ${{ github.workspace }}/temp
-  SUITE_PATH: ${{ github.workspace }}/Test_CICD/test-suite/base.suite.tspp
-  RUN_PROFILE_PATH: ${{ github.workspace }}/Test_CICD/run-profile/base.profile.tspp
-  ENVIRONMENT: UAT_Environment
+    branches: [ "main" ]
 
 jobs:
-  execute_test:
-    runs-on: ubuntu-22.04
+  dev_tests:
+    runs-on: ubuntu-latest
+    env:
+      JOB_NAME: dev_tests
+      DEVASSURE_CLI_URL: https://devassures3bucket.s3.amazonaws.com/linux/cli/DevAssure.zip
+      SOURCE_PATH: ${{ github.workspace }}/Test_CICD
+      TARGET_PATH: ${{ github.workspace }}/temp
+      SUITE_PATH: ${{ github.workspace }}/Test_CICD/test-suite/base.suite.tspp
+      RUN_PROFILE_PATH: ${{ github.workspace }}/Test_CICD/run-profile/base.profile.tspp
+      ENVIRONMENT: UAT_Environment
 
     steps:
 
-      # --------------------------------------------------------------
-      # Step 01: Checkout Repository
-      - name: "01️⃣ Checkout Repository"
-        uses: actions/checkout@v4
-      # --------------------------------------------------------------
+      # -------------------------
+      # 1️⃣ Checkout repository
+      - name: "01️⃣ Checkout code"
+        uses: actions/checkout@v3
 
-      # Step 02: Setup Node.js
+      # -------------------------
+      # 2️⃣ Setup Node.js
       - name: "02️⃣ Setup Node.js"
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: "20.x"
 
-      # Step 03: Downgrade npm to v9
-      - name: "03️⃣ Downgrade npm to v9"
+      # -------------------------
+      # 3️⃣ Install unzip (for DevAssure CLI)
+      - name: "03️⃣ Install unzip"
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      # -------------------------
+      # 4️⃣ Download & prepare DevAssure CLI
+      - name: "04️⃣ Download DevAssure CLI"
         run: |
-          echo "Downgrading npm to v9 for DevAssure compatibility..."
-          npm install -g npm@9
-          npm --version
-          node --version
+          echo "⬇️ Downloading DevAssure CLI..."
+          mkdir -p "$TARGET_PATH/DA"
+          curl -L "$DEVASSURE_CLI_URL" -o "$TARGET_PATH/DA/DevAssure.zip"
+          unzip "$TARGET_PATH/DA/DevAssure.zip" -d "$TARGET_PATH/DA"
+          chmod +x "$TARGET_PATH/DA/DA"
+          export PATH="$TARGET_PATH/DA:$PATH"
 
-      # Step 04: Install pnpm
-      - name: "04️⃣ Install pnpm"
-        run: |
-          npm install -g pnpm
-          pnpm --version
-
-      # Step 05: Install system dependencies
-      - name: "05️⃣ Install DevAssure CLI dependencies"
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2 \
-            libdbus-1-3 libdrm2 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 \
-            libwayland-client0 libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 \
-            libxfixes3 libxkbcommon0 libxrandr2 ffmpeg libcairo-gobject2 libdbus-glib-1-2 \
-            libfontconfig1 libfreetype6 libgdk-pixbuf-2.0-0 libgtk-3-0 libpangocairo-1.0-0 \
-            libx11-xcb1 libxcb-shm0 libxcursor1 libxi6 libxrender1 libxtst6 libsoup-3.0-0 \
-            libenchant-2-2 gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good libicu70 libegl1 libepoxy0 libevdev2 libffi7 libgles2 libglx0 \
-            libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-0 libgstreamer1.0-0 libgtk-4-1 \
-            libgudev-1.0-0 libharfbuzz-icu0 libharfbuzz0b libhyphen0 libjpeg-turbo8 liblcms2-2 \
-            libmanette-0.2-0 libnotify4 libopengl0 libopenjp2-7 libopus0 libpng16-16 libproxy1v5 \
-            libsecret-1-0 libwayland-egl1 libwayland-server0 libwebpdemux2 libwoff1 libxml2 \
-            libxslt1.1 libx264-163 libatomic1 libevent-2.1-7 libavif13 xvfb fonts-noto-color-emoji \
-            fonts-unifont xfonts-cyrillic xfonts-scalable fonts-liberation fonts-ipafont-gothic \
-            fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf
-
-      # Step 06: Download DevAssure CLI
-      - name: "06️⃣ Download and Unzip DevAssure CLI"
-        shell: bash
-        run: |
-          echo "Downloading DevAssure CLI..."
-          curl -L "${DEVASSURE_CLI_URL}" -o DevAssure.zip
-          unzip -o DevAssure.zip
-          chmod +x ./DA
-          echo "✅ DevAssure CLI ready."
-
-      # Step 07: Install project dependencies
-      - name: "07️⃣ Install project dependencies"
-        working-directory: ${{ env.SOURCE_PATH }}
-        run: |
-          echo "Installing project dependencies..."
-          rm -rf node_modules pnpm-lock.yaml
-          pnpm install --no-frozen-lockfile
-
-      # Step 08: Setup DevAssure browsers (optional)
-      - name: "08️⃣ Setup DevAssure browsers"
-        shell: bash
-        run: |
-          echo "Setting up DevAssure dependencies..."
-          if [ -f ./tpp_setup_browsers ]; then
-            chmod +x ./tpp_setup_browsers
-            ./tpp_setup_browsers || echo "⚠️ tpp_setup_browsers failed (non-blocking)"
-          else
-            echo "tpp_setup_browsers not found, skipping."
-          fi
-
-      # Step 09: Execute DevAssure Tests
-      - name: "09️⃣ Execute DevAssure Tests"
+      # -------------------------
+      # 5️⃣ Run DevAssure Tests
+      - name: "05️⃣ Execute DevAssure Tests"
         shell: bash
         continue-on-error: true
-        env:
-          DEVASSURE_AUTH_TOKEN: ${{ secrets.DEVASSURE_AUTH_TOKEN }}
         run: |
           echo "🚀 Running DevAssure Tests..."
           mkdir -p "$TARGET_PATH"
           chmod 777 "$TARGET_PATH"
 
           ./DA run \
-            --auth-token "$DEVASSURE_AUTH_TOKEN" \
-            --source "$SOURCE_PATH" \
+            "$SUITE_PATH" \
+            "$RUN_PROFILE_PATH" \
             --target "$TARGET_PATH" \
-            --suite "$SUITE_PATH" \
-            --run-profile "$RUN_PROFILE_PATH" \
             --environment "$ENVIRONMENT" \
             --total-nodes 1 \
-            --node-id 0 || true
+            --node-id 0 \
+            --debug || true
 
           echo "Debug: Listing target folder contents:"
           ls -R "$TARGET_PATH" || true
 
-      # Step 10: Wait for .target folder
-      - name: "10️⃣ Wait for DevAssure results (.target)"
-        run: |
-          echo "⏳ Waiting for DevAssure .target output..."
-          for i in {1..20}; do
-            if [ -d "${TARGET_PATH}/.target" ]; then
-              echo "✅ .target folder detected!"
-              ls -R "${TARGET_PATH}/.target"
-              break
-            fi
-            echo "⌛ Attempt $i/20 – waiting for .target..."
-            sleep 3
-          done
-
-      # Step 11: Detect .target result folder
-      - name: "11️⃣ Detect .target result folder"
-        run: |
-          echo "🔍 Detecting .target result folder..."
-          TARGET1="${TARGET_PATH}/.target"
-          TARGET2="${SOURCE_PATH}/.target"
-
-          if [ -d "$TARGET1" ]; then
-            echo "FOUND_TARGET=$TARGET1" >> $GITHUB_ENV
-            echo "Using TARGET_PATH output."
-          elif [ -d "$TARGET2" ]; then
-            echo "FOUND_TARGET=$TARGET2" >> $GITHUB_ENV
-            echo "Using SOURCE_PATH output."
-          else
-            echo "❌ No .target folder found!"
-            echo "FOUND_TARGET=" >> $GITHUB_ENV
-          fi
-
-      # Step 12: Upload results
-      - name: "12️⃣ Upload DevAssure Test Results"
-        if: always()
+      # -------------------------
+      # 6️⃣ Upload artifacts
+      - name: "06️⃣ Upload DevAssure Results"
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ env.FOUND_TARGET }}/Test_GitHub_Runner/html-report
-          if-no-files-found: warn
+          path: ${{ env.TARGET_PATH }}
 
-      # Step 13: Extract summary.json
-      - name: "13️⃣ Extract Test Summary"
-        if: always()
+      # -------------------------
+      # 7️⃣ Parse summary.json
+      - name: "07️⃣ Parse summary.json"
+        shell: bash
         run: |
-          SUMMARY_JSON=$(find "${TARGET_PATH}" "${SOURCE_PATH}" -type f -name "summary.json" | head -n 1)
+          SUMMARY_JSON=$(find "$TARGET_PATH" -type f -name "summary.json" | head -n 1)
 
           if [ -z "$SUMMARY_JSON" ]; then
             echo "❌ Summary not found. Setting all values to 0."
@@ -195,30 +106,19 @@ jobs:
           echo "FAILED=$FAILED" >> $GITHUB_ENV
           echo "TOTAL=$TOTAL" >> $GITHUB_ENV
 
-      # Step 14: Send email notification
-      - name: "14️⃣ Send Email Notification"
-        if: always()
+      # -------------------------
+      # 8️⃣ Send email (optional)
+      - name: "08️⃣ Send email with results"
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          from: ${{ secrets.EMAIL_USERNAME }}
-          to: gamtaa@gmail.com, mtxqa1@gmail.com
-          subject: "📊 DevAssure Test Run #${{ github.run_number }}"
+          server_address: smtp.example.com
+          server_port: 587
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASS }}
+          subject: "DevAssure Test Results"
           body: |
-            🚀 DevAssure Tests Finished!
-
-            📋 Repository: ${{ github.repository }}
-            🧪 Workflow Run: ${{ github.run_number }}
-            ✅ Passed: ${{ env.PASSED }}
-            ❌ Failed: ${{ env.FAILED }}
-            📊 Total: ${{ env.TOTAL }}
-
-            📎 HTML Report is attached if available.
-          attachments: |
-            ${{ env.FOUND_TARGET }}/Test_GitHub_Runner/html-report/index.html
-          nodemailerdebug: true
-          nodemailerlog: true
+            ✅ PASSED: ${{ env.PASSED }}
+            ❌ FAILED: ${{ env.FAILED }}
+            📊 TOTAL: ${{ env.TOTAL }}
+          to: team@example.com
+          from: ci@example.com
