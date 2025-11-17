@@ -10,6 +10,8 @@ on:
     branches:
       - '*'
   workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"    # Runs every 30 minutes 
 
 env:
   JOB_NAME: dev_tests
