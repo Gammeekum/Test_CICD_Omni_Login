@@ -125,7 +125,7 @@ jobs:
           export DISPLAY=:99
 
           # Run DevAssure tests (NO unsupported flags)
-          ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
+          ./DA --debug true --auth-token "$DEVASSURE_AUTH_TOKEN" \
              --source "$SOURCE_PATH" \
              --target "$TARGET_PATH" \
              run --suite "$SUITE_PATH" \
