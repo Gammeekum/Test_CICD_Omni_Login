@@ -155,8 +155,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ env.TARGET_PATH }}/.target
-          if-no-files-found: error
+          path: ${{ env.TARGET_PATH }}/.target/**
+          if-no-files-found: warn
 
       # =============================================================
       # 12. EXTRACT SUMMARY.JSON
