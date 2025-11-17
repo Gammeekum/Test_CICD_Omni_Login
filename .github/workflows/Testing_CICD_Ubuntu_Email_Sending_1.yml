@@ -41,22 +41,6 @@ jobs:
           node-version: "20"
 
       # =============================================================
-      # 3️⃣ Downgrade npm to v9 (required by DevAssure)
-      # =============================================================
-      - name: 3️⃣ Downgrade npm
-        run: |
-          npm install -g npm@9
-          npm --version
-
-      # =============================================================
-      # 4️⃣ Install pnpm
-      # =============================================================
-      - name: 4️⃣ Install pnpm
-        run: |
-          npm install -g pnpm
-          pnpm --version
-
-      # =============================================================
       # 5️⃣ Install system dependencies for browser engine
       # =============================================================
       - name: 5️⃣ Install DevAssure browser dependencies
@@ -90,20 +74,6 @@ jobs:
           chmod +x ./DA
           echo "DevAssure CLI downloaded."
 
-      # =============================================================
-      # 7️⃣ Install project dependencies
-      # =============================================================
-      - name: 7️⃣ Install project node modules
-        working-directory: ${{ env.SOURCE_PATH }}
-        run: |
-          rm -rf node_modules pnpm-lock.yaml
-          pnpm install --no-frozen-lockfile
-
-      # =============================================================
-      # 8️⃣ Setup DevAssure browsers (optional)
-      # =============================================================
-      - name: 8️⃣ Setup DevAssure browsers
-        run: npx playwright install --with-deps
       # =============================================================
       # 9️⃣ Run DevAssure tests (fixed)
       # =============================================================
