@@ -1,8 +1,0 @@
-{
-  "name": "Base Run Profile",
-  "description": "Minimal run profile for DevAssure CI/CD",
-  "environment": "UAT_Environment",
-  "browser": "chrome",
-  "headless": true,
-  "timeout": 30000
-}
