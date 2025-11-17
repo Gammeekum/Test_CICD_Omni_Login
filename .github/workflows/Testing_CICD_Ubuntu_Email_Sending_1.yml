@@ -103,12 +103,7 @@ jobs:
       # 8️⃣ Setup DevAssure browsers (optional)
       # =============================================================
       - name: 8️⃣ Setup DevAssure browsers
-        run: |
-          if [ -f ./tpp_setup_browsers ]; then
-            chmod +x ./tpp_setup_browsers
-            ./tpp_setup_browsers || echo "⚠️ Browser setup failed (non-blocking)"
-          fi
-
+        run: npx playwright install --with-deps
       # =============================================================
       # 9️⃣ Run DevAssure tests (fixed)
       # =============================================================
