@@ -131,6 +131,12 @@ jobs:
 
           echo "Listing target directory:"
           ls -R "$TARGET_PATH"
+      #==============================================================
+      - name: 🧪 DEBUG — List .target directory
+        if: always()
+        run: |
+          echo "Listing .target folder..."
+          ls -R "${{ env.TARGET_PATH }}/.target"
 
       # =============================================================
       # 10. WAIT FOR .target FOLDER
