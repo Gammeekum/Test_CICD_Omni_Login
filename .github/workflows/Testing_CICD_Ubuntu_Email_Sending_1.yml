@@ -156,23 +156,28 @@ jobs:
         with:
           name: DevAssure_Test_Results
           path: ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/**
-
           if-no-files-found: warn
 
       # =============================================================
-      # 12. EXTRACT SUMMARY.JSON
+      # 12. EXTRACT SUMMARY.JSON (FIX APPLIED HERE)
       # =============================================================
       - name: 1️⃣2️⃣ Extract Test Summary
         if: always()
         run: |
-          SUMMARY_JSON=$(find "${TARGET_PATH}" -type f -name "summary.json" | head -n 1)
+          echo "🔍 Searching for summary.json inside .target..."
+          find "${TARGET_PATH}/.target" -type f -name "summary.json"
+
+          SUMMARY_JSON=$(find "${TARGET_PATH}/.target" -type f -name "summary.json" | head -n 1)
 
           if [ -z "$SUMMARY_JSON" ]; then
+            echo "❌ summary.json not found!"
             echo "PASSED=0" >> $GITHUB_ENV
             echo "FAILED=0" >> $GITHUB_ENV
             echo "TOTAL=0" >> $GITHUB_ENV
             exit 0
           fi
+
+          echo "✅ summary.json found at: $SUMMARY_JSON"
 
           PASSED=$(jq '.passed' "$SUMMARY_JSON")
           FAILED=$(jq '.failed' "$SUMMARY_JSON")
