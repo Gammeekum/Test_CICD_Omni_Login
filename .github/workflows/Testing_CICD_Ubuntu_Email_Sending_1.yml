@@ -27,13 +27,13 @@ jobs:
     steps:
 
       # =============================================================
-      # 1️⃣ CHECKOUT CODE
+      # 1️⃣ Checkout Repository
       # =============================================================
       - name: 1️⃣ Checkout Repository
         uses: actions/checkout@v4
 
       # =============================================================
-      # 2️⃣ SETUP NODE
+      # 2️⃣ Setup Node.js 20
       # =============================================================
       - name: 2️⃣ Setup Node.js 20
         uses: actions/setup-node@v4
@@ -41,15 +41,15 @@ jobs:
           node-version: "20"
 
       # =============================================================
-      # 3️⃣ DOWNGRADE NPM (required for DevAssure)
+      # 3️⃣ Downgrade npm to v9 (required by DevAssure)
       # =============================================================
-      - name: 3️⃣ Downgrade npm to v9
+      - name: 3️⃣ Downgrade npm
         run: |
           npm install -g npm@9
           npm --version
 
       # =============================================================
-      # 4️⃣ INSTALL PNPM
+      # 4️⃣ Install pnpm
       # =============================================================
       - name: 4️⃣ Install pnpm
         run: |
@@ -57,9 +57,9 @@ jobs:
           pnpm --version
 
       # =============================================================
-      # 5️⃣ INSTALL SYSTEM DEPENDENCIES FOR BROWSERS
+      # 5️⃣ Install system dependencies for browser engine
       # =============================================================
-      - name: 5️⃣ Install DevAssure Browser Dependencies
+      - name: 5️⃣ Install DevAssure browser dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -81,7 +81,7 @@ jobs:
             fonts-freefont-ttf
 
       # =============================================================
-      # 6️⃣ DOWNLOAD DEVASSURE CLI
+      # 6️⃣ Download DevAssure CLI
       # =============================================================
       - name: 6️⃣ Download DevAssure CLI
         run: |
@@ -91,7 +91,7 @@ jobs:
           echo "DevAssure CLI downloaded."
 
       # =============================================================
-      # 7️⃣ INSTALL PROJECT DEPENDENCIES
+      # 7️⃣ Install project dependencies
       # =============================================================
       - name: 7️⃣ Install project node modules
         working-directory: ${{ env.SOURCE_PATH }}
@@ -100,9 +100,9 @@ jobs:
           pnpm install --no-frozen-lockfile
 
       # =============================================================
-      # 8️⃣ SETUP BROWSERS (OPTIONAL)
+      # 8️⃣ Setup DevAssure browsers (optional)
       # =============================================================
-      - name: 8️⃣ Setup DevAssure Browsers
+      - name: 8️⃣ Setup DevAssure browsers
         run: |
           if [ -f ./tpp_setup_browsers ]; then
             chmod +x ./tpp_setup_browsers
@@ -110,7 +110,7 @@ jobs:
           fi
 
       # =============================================================
-      # 9️⃣ RUN DEVASSURE TESTS (WITH VIRTUAL DISPLAY)
+      # 9️⃣ Run DevAssure tests (fixed)
       # =============================================================
       - name: 9️⃣ Execute DevAssure Tests
         continue-on-error: true
@@ -124,7 +124,7 @@ jobs:
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
 
-          # Run DevAssure tests
+          # Run DevAssure tests (NO unsupported flags)
           ./DA --auth-token "$DEVASSURE_AUTH_TOKEN" \
              --source "$SOURCE_PATH" \
              --target "$TARGET_PATH" \
@@ -133,13 +133,13 @@ jobs:
              --branch main \
              --job-name "$JOB_NAME" \
              --run-profile "$RUN_PROFILE_PATH" \
-             --screenshot-after-step true || true
+             --environment "$ENVIRONMENT" || true
 
           echo "Listing target directory:"
           ls -R "$TARGET_PATH"
 
       # =============================================================
-      # 🔟 WAIT FOR .target FOLDER
+      # 10️⃣ Wait for .target folder
       # =============================================================
       - name: 🔟 Wait for .target folder
         run: |
@@ -154,18 +154,18 @@ jobs:
           done
 
       # =============================================================
-      # 1️⃣1️⃣ UPLOAD ARTIFACTS
+      # 11️⃣ Upload DevAssure Test Results
       # =============================================================
       - name: 1️⃣1️⃣ Upload DevAssure Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: DevAssure_Test_Results
-          path: ${{ env.TARGET_PATH }}/.target/Test_GitHub_Runner/**
+          path: ${{ env.TARGET_PATH }}/.target/**
           if-no-files-found: warn
 
       # =============================================================
-      # 1️⃣2️⃣ EXTRACT SUMMARY.JSON
+      # 12️⃣ Extract Test Summary
       # =============================================================
       - name: 1️⃣2️⃣ Extract Test Summary
         if: always()
@@ -188,7 +188,7 @@ jobs:
           echo "TOTAL=$TOTAL" >> $GITHUB_ENV
 
       # =============================================================
-      # 1️⃣3️⃣ SEND EMAIL WITH RESULTS
+      # 13️⃣ Send Email Notification
       # =============================================================
       - name: 1️⃣3️⃣ Send Email Notification
         if: always()
