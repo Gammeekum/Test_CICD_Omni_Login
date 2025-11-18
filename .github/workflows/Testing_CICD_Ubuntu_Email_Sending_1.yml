@@ -11,7 +11,7 @@ on:
       - '*'
   workflow_dispatch:
   schedule:
-    - cron: "0 */12 * * *"    # Runs every 30 minutes 
+    - cron: "0 */12 * * *"    # Runs every 12hrs 
 
 env:
   JOB_NAME: dev_tests
@@ -77,7 +77,7 @@ jobs:
           echo "DevAssure CLI downloaded."
 
       # =============================================================
-      # 9️⃣ Run DevAssure tests (fixed)
+      # 9️⃣ Run DevAssure Tests
       # =============================================================
       - name: 9️⃣ Execute DevAssure Tests
         continue-on-error: true
