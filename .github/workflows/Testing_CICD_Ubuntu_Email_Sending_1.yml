@@ -11,7 +11,7 @@ on:
       - '*'
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"    # Runs every hrs 
+    - cron: "0 */12 * * *"    # Runs every 12 hrs 
 
 env:
   JOB_NAME: dev_tests
